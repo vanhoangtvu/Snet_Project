@@ -1,275 +1,442 @@
-# PixShare
+# 🌟 PixShare
 
 <div align="center">
 
-![PixShare Logo](https://img.shields.io/badge/PixShare-Social%20Platform-blue?style=for-the-badge)
+![PixShare Banner](https://img.shields.io/badge/PixShare-Social%20Media%20Platform-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3TDEyIDEyTDIyIDdMMTIgMloiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0yIDEyTDEyIDE3TDIyIDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=)
 
-**Nền tảng chia sẻ ảnh, video và nhắn tin trực tuyến**
+**🎯 Modern Social Media & File Sharing Platform**
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-black.svg)](https://nextjs.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-blue.svg)](https://www.mysql.com/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+*Chia sẻ, kết nối và tương tác - Tất cả trong một nền tảng*
+
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.0-6DB33F?style=flat-square&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0.4-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 ---
 
-**👨‍💻 Developed by:** [Nguyen Van Hoang](https://github.com/vanhoangtvu) | 📧 nguyenhoang4556z@gmail.com | 📱 0889559357
+**👨‍💻 Developed by:** [Nguyen Van Hoang](https://github.com/vanhoangtvu)  
+📧 nguyenhoang4556z@gmail.com | 📱 0889559357
+
+[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [📚 Documentation](#-api-documentation) • [🎯 Demo](#-demo)
 
 </div>
 
 ---
 
-## 📋 Mục lục
+## 📖 Table of Contents
 
-- [Giới thiệu](#-giới-thiệu)
-- [Tính năng](#-tính-năng)
-- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
-- [Cài đặt](#-cài-đặt)
-- [Cấu hình](#-cấu-hình)
-- [Chạy ứng dụng](#-chạy-ứng-dụng)
-- [API Documentation](#-api-documentation)
-- [Cấu trúc dự án](#-cấu-trúc-dự-án)
-- [Tài khoản test](#-tài-khoản-test)
-- [Phát triển](#-phát-triển)
-- [Triển khai](#-triển-khai)
-- [Đóng góp](#-đóng-góp)
-- [License](#-license)
-- [Authors](#-authors)
-- [Support](#-support)
-
----
-
-## 🎯 Giới thiệu
-
-**PixShare** là một nền tảng mạng xã hội hiện đại cho phép người dùng:
-- Chia sẻ ảnh, video và tài liệu
-- Nhắn tin realtime với bạn bè
-- Tạo và tham gia nhóm chat
-- Đăng bài viết và tương tác xã hội (posts, comments, likes)
-- Chia sẻ file công khai qua link và QR code
-- Quản lý profile cá nhân chi tiết
-
-Ứng dụng được xây dựng với kiến trúc full-stack hiện đại, tích hợp WebSocket để chat realtime, và hệ thống quản trị toàn diện.
-
-> **Developed by:** [Nguyen Van Hoang](https://github.com/vanhoangtvu) - Backend Developer chuyên về Java Spring Boot, với đam mê xây dựng các ứng dụng web mạnh mẽ và có khả năng mở rộng.
+- [🎯 About PixShare](#-about-pixshare)
+- [✨ Features](#-features)
+- [🎬 Demo & Screenshots](#-demo--screenshots)
+- [🏗️ Architecture](#️-architecture)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🚀 Quick Start](#-quick-start)
+- [⚙️ Configuration](#️-configuration)
+- [📚 API Documentation](#-api-documentation)
+- [📂 Project Structure](#-project-structure)
+- [🔑 Test Accounts](#-test-accounts)
+- [🐳 Docker Deployment](#-docker-deployment)
+- [💻 Development](#-development)
+- [🔒 Security](#-security)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
 ---
 
-## ✨ Tính năng
+## 🎯 About PixShare
 
-### 👤 Quản lý người dùng
-- ✅ Đăng ký/Đăng nhập với JWT authentication
-- ✅ Quản lý profile cá nhân (avatar, bio, địa chỉ, số điện thoại)
-- ✅ Thông tin mở rộng (công việc, học vấn, sở thích, ngôn ngữ)
-- ✅ Social links (Website, Facebook, Twitter, Instagram, LinkedIn)
-- ✅ Trạng thái online/offline realtime
-- ✅ Tìm kiếm người dùng
-- ✅ Xem profile người dùng khác
+**PixShare** là một nền tảng mạng xã hội full-stack hiện đại, kết hợp tính năng chia sẻ file mạnh mẽ với trải nghiệm social media trực quan.
 
-### 👥 Bạn bè & Kết nối
-- ✅ Gửi lời mời kết bạn
-- ✅ Chấp nhận/từ chối lời mời
-- ✅ Danh sách bạn bè
-- ✅ Xóa bạn bè
-- ✅ Thông báo lời mời kết bạn
+### 🌟 Highlights
 
-### 💬 Chat & Nhắn tin
-- ✅ Chat realtime với WebSocket (STOMP)
-- ✅ Chat 1-1 với bạn bè
-- ✅ Nhóm chat (group chat)
-- ✅ Gửi tin nhắn văn bản
-- ✅ Gửi file đính kèm trong chat
-- ✅ Đánh dấu tin nhắn đã đọc/chưa đọc
-- ✅ Hiển thị số tin nhắn chưa đọc
-- ✅ Xóa tin nhắn
-- ✅ Typing indicator
+- 📱 **Social Feed** - Đăng bài, like, comment với ảnh/video
+- 💬 **Real-time Chat** - WebSocket messaging với typing indicator
+- 📁 **File Management** - Upload file tới 1GB, QR code sharing
+- 🎥 **Video Streaming** - Autoplay, YouTube/TikTok/Vimeo embedding
+- 👥 **Friends System** - Kết bạn, nhóm chat
+- 👨‍💼 **Admin Dashboard** - Quản trị toàn diện
+- 🎨 **Modern UI** - TailwindCSS, responsive design
+- ⚡ **High Performance** - Optimized for large files
 
-### 📁 Quản lý File
-- ✅ Upload file (ảnh, video, tài liệu) - tối đa 1GB/file
-- ✅ Lưu trữ file trong MySQL (LONGBLOB)
-- ✅ Tự động tạo thumbnail cho ảnh
-- ✅ Xem trước file (preview)
-- ✅ Tải xuống file
-- ✅ Xóa file
-- ✅ Quản lý quota dung lượng (mặc định 5GB/user)
-- ✅ Phân loại file theo danh mục (IMAGE, VIDEO, DOCUMENT)
+### 💡 Why PixShare?
 
-### 🔗 Chia sẻ công khai
-- ✅ Tạo link chia sẻ công khai cho file
-- ✅ Tạo QR code cho link chia sẻ
-- ✅ Truy cập file không cần đăng nhập
-- ✅ Vô hiệu hóa link chia sẻ
-- ✅ Theo dõi lượt truy cập
+- ✅ **Open Source** - Free và có thể tùy chỉnh
+- ✅ **Production Ready** - Docker, secure authentication
+- ✅ **Scalable** - Microservices-ready architecture
+- ✅ **Developer Friendly** - Clean code, well documented
 
-### 📱 Social Feed
-- ✅ Đăng bài viết (text, image, video)
-- ✅ Like/Unlike bài viết
-- ✅ Comment trên bài viết
-- ✅ Xem feed từ bạn bè
-- ✅ Chế độ riêng tư (Public, Friends Only, Private)
-- ✅ Đếm số lượt like và comment
-- ✅ Xóa/Sửa bài viết của mình
+---
+
+## ✨ Features
+
+### 👤 **User Management**
+- 🔐 JWT Authentication & Authorization
+- 👤 Comprehensive Profile (avatar, cover, bio, social links)
+- 🎓 Extended Info (education, work, interests, languages)
+- 🔍 User Search & Discovery
+- ✓ Verified Badges
+- 🟢 Online/Offline Status (Real-time)
+
+### 👥 **Social Connections**
+- 🤝 Friend Requests (send/accept/reject)
+- 👫 Friends List Management
+- 🔔 Real-time Notifications
+- 👁️ Profile Viewing
+
+### 💬 **Real-time Chat**
+- 💌 Direct Messaging (1-on-1)
+- 👥 Group Chat
+- 📎 File Attachments
+- ✓ Read Receipts
+- 💬 Typing Indicators
+- 🔔 Unread Message Counter
+- 🗑️ Message Deletion & Recall
+
+### 📱 **Social Feed**
+- 📝 Create Posts (text, image, video)
+- 🎥 **Embedded Videos** (YouTube, TikTok, Vimeo, Dailymotion)
+- ▶️ **Auto-play Videos** when scrolling
+- 🔊 **Audio Enabled** by default
+- ❤️ Like/Unlike Posts
+- 💬 Comments System
+- 🔒 Privacy Settings (Public, Friends Only, Private)
+- ✏️ Edit/Delete Own Posts
+- 📊 Like & Comment Counters
+
+### 📁 **File Management**
+- 📤 Upload Files (images, videos, documents) - up to **1GB**
+- 🗄️ Database Storage (MySQL LONGBLOB)
+- 🖼️ Auto Thumbnail Generation
+- 👁️ File Preview (images, videos, PDFs, Office docs, code files)
+- 📥 Download Files
+- 🗑️ Delete Files
+- 📊 Storage Quota (default 5GB/user)
+- 📂 Categories (IMAGE, VIDEO, DOCUMENT, AUDIO, OTHER)
+
+### 🔗 **Public Sharing**
+- 🔗 Generate Share Links
+- 📱 QR Code Generation
+- 🌐 Access Files Without Login
+- 📊 Access Count Tracking
+- ⏰ Link Expiration (optional)
+- 🚫 Disable Shares
+
+### 👨‍💼 **Admin Dashboard**
+- 📊 **Statistics** (users, files, messages, storage)
+- 📈 **Charts & Graphs** (Recharts)
+- 👥 **User Management** (lock/unlock, quota, verification)
+- 📁 **File Management** (view all, delete, stats by category)
+- 💬 **Message Moderation** (search, delete)
+- 📝 **Admin Logs** (activity tracking)
+- 🏆 **Top Users** by storage usage
+
+### 🎥 **Video Features** ⭐ NEW
+- ▶️ **Auto-play** videos when scrolling (50% viewport)
+- 🔊 **Audio Enabled** by default (unmuted)
+- 🎬 **Embedded Videos** support:
+  - YouTube
+  - TikTok (portrait format)
+  - Vimeo
+  - Dailymotion
+- 📹 **Video Streaming** optimized
+- 🎮 **Video Controls** (play/pause on click, mute toggle)
+- 📱 **Mobile Optimized** video playback
+
+---
+
+## 🎬 Demo & Screenshots
+
+### 🏠 Home & Feed
+```
+┌─────────────────────────────────────────────────┐
+│  📱 Social Feed                                 │
+│  ┌───────────────────────────────────────────┐ │
+│  │ 👤 User Profile                           │ │
+│  │ 📝 Create Post                            │ │
+│  │ 🎥 Add Video/YouTube                      │ │
+│  └───────────────────────────────────────────┘ │
+│                                                 │
+│  ┌───────────────────────────────────────────┐ │
+│  │ 🎬 Video Post (Auto-play)                 │ │
+│  │ [▶️ Video Player with Audio]              │ │
+│  │ ❤️ 123 likes  💬 45 comments              │ │
+│  └───────────────────────────────────────────┘ │
+│                                                 │
+│  ┌───────────────────────────────────────────┐ │
+│  │ 🖼️ Image Post                             │ │
+│  │ [Image Gallery]                           │ │
+│  │ ❤️ 89 likes  💬 12 comments               │ │
+│  └───────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+### 💬 Chat Interface
+```
+┌─────────────────────────────────────────────────┐
+│  Friends List    │  Chat Window                 │
+│  ─────────────   │  ─────────────────────       │
+│  🟢 John Doe     │  [Messages Thread]           │
+│  🟢 Jane Smith   │  👤 John: Hello!             │
+│  ⚫ Mike Johnson  │  👤 You: Hi there! 👋        │
+│  💬 Group Chat   │  [💬 typing...]              │
+│                  │  ──────────────────────       │
+│                  │  [Type message...] 📎 📤     │
+└─────────────────────────────────────────────────┘
+```
+
+### 📁 File Manager
+```
+┌─────────────────────────────────────────────────┐
+│  📤 Upload Zone         📊 Stats: 2.3GB / 5GB   │
+│  ┌───────────────────────────────────────────┐ │
+│  │ 🖼️ Image Files    🎬 Videos    📄 Docs   │ │
+│  └───────────────────────────────────────────┘ │
+│                                                 │
+│  ┌────┐ ┌────┐ ┌────┐ ┌────┐                  │
+│  │📷  │ │🎥  │ │📄  │ │📊  │                  │
+│  │IMG │ │VID │ │PDF │ │XLS │                  │
+│  └────┘ └────┘ └────┘ └────┘                  │
+│  [👁️ 📥 🔗 🗑️] [Controls]                     │
+└─────────────────────────────────────────────────┘
+```
 
 ### 👨‍💼 Admin Dashboard
-- ✅ Thống kê tổng quan (users, files, messages, storage)
-- ✅ Biểu đồ thống kê (Recharts)
-- ✅ Quản lý người dùng (khóa/mở khóa tài khoản, cập nhật quota)
-- ✅ Quản lý file (xem, xóa, thống kê theo loại)
-- ✅ Top users chiếm nhiều dung lượng
-- ✅ Tìm kiếm và quản lý tin nhắn
-- ✅ Nhật ký hoạt động admin (admin logs)
-- ✅ Tìm kiếm logs theo hành động
+```
+┌─────────────────────────────────────────────────┐
+│  📊 Dashboard Overview                          │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │
+│  │ 👥 1234│ │ 📁 5678│ │ 💬 9012│ │ 💾 234G│ │
+│  │ Users  │ │ Files  │ │ Msgs   │ │ Storage│ │
+│  └────────┘ └────────┘ └────────┘ └────────┘ │
+│                                                 │
+│  📈 [Charts & Graphs]                          │
+│  📋 [Activity Logs]                            │
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
+## 🏗️ Architecture
+
+### System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         Client Layer                        │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │      Next.js 14 (React 18) + TypeScript              │ │
-│  │  - App Router                                         │ │
-│  │  - TailwindCSS                                        │ │
-│  │  - Axios (HTTP Client)                                │ │
-│  │  - STOMP over WebSocket                               │ │
-│  └───────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                              ↕
-              HTTP/HTTPS + WebSocket (wss://)
-                              ↕
-┌─────────────────────────────────────────────────────────────┐
-│                      Backend Layer                          │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │      Spring Boot 3.2.0 (Java 17)                     │ │
-│  │  ┌─────────────────────────────────────────────────┐ │ │
-│  │  │  Controllers (REST API)                         │ │ │
-│  │  │  - AuthController                               │ │ │
-│  │  │  - UserController                               │ │ │
-│  │  │  - FileController                               │ │ │
-│  │  │  - MessageController (WebSocket)                │ │ │
-│  │  │  - PostController                               │ │ │
-│  │  │  - GroupController                              │ │ │
-│  │  │  - AdminController                              │ │ │
-│  │  └─────────────────────────────────────────────────┘ │ │
-│  │  ┌─────────────────────────────────────────────────┐ │ │
-│  │  │  Services (Business Logic)                      │ │ │
-│  │  └─────────────────────────────────────────────────┘ │ │
-│  │  ┌─────────────────────────────────────────────────┐ │ │
-│  │  │  Security (JWT + Spring Security)               │ │ │
-│  │  └─────────────────────────────────────────────────┘ │ │
-│  │  ┌─────────────────────────────────────────────────┐ │ │
-│  │  │  Data Layer (Spring Data JPA)                   │ │ │
-│  │  └─────────────────────────────────────────────────┘ │ │
-│  └───────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-                              ↕
-                         JDBC Connection
-                              ↕
-┌─────────────────────────────────────────────────────────────┐
-│                      Database Layer                         │
-│  ┌───────────────────────────────────────────────────────┐ │
-│  │              MySQL 8.0                                │ │
-│  │  - Users, Friendships, Messages                       │ │
-│  │  - Files (LONGBLOB), Posts, Comments                  │ │
-│  │  - Groups, Admin Logs                                 │ │
-│  └───────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                     CLIENT LAYER                        │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │   Next.js 14 + React 18 + TypeScript            │  │
+│  │   • App Router (RSC)                             │  │
+│  │   • TailwindCSS Styling                          │  │
+│  │   • Context API State Management                 │  │
+│  │   • Axios HTTP Client                            │  │
+│  │   • SockJS + STOMP WebSocket                     │  │
+│  └─────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                            ↕
+            HTTP/HTTPS + WebSocket (wss://)
+                            ↕
+┌─────────────────────────────────────────────────────────┐
+│                    BACKEND LAYER                        │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │       Spring Boot 3.2.0 (Java 17)               │  │
+│  │                                                  │  │
+│  │  ┌──────────────────────────────────────────┐  │  │
+│  │  │  REST Controllers                        │  │  │
+│  │  │  • Auth, User, File, Post, Message      │  │  │
+│  │  │  • WebSocket Endpoints                   │  │  │
+│  │  └──────────────────────────────────────────┘  │  │
+│  │  ┌──────────────────────────────────────────┐  │  │
+│  │  │  Security Layer                          │  │  │
+│  │  │  • JWT Authentication                    │  │  │
+│  │  │  • Spring Security 6                     │  │  │
+│  │  │  • Role-based Access Control             │  │  │
+│  │  └──────────────────────────────────────────┘  │  │
+│  │  ┌──────────────────────────────────────────┐  │  │
+│  │  │  Business Logic (Services)               │  │  │
+│  │  └──────────────────────────────────────────┘  │  │
+│  │  ┌──────────────────────────────────────────┐  │  │
+│  │  │  Data Access (Spring Data JPA)           │  │  │
+│  │  └──────────────────────────────────────────┘  │  │
+│  └─────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                            ↕
+                    JDBC Connection
+                            ↕
+┌─────────────────────────────────────────────────────────┐
+│                   DATABASE LAYER                        │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │              MySQL 8.0                          │  │
+│  │  • Users, Profiles                              │  │
+│  │  • Files (LONGBLOB) up to 1GB                   │  │
+│  │  • Messages, Posts, Comments                    │  │
+│  │  • Groups, Friendships                          │  │
+│  │  • Admin Logs                                   │  │
+│  └─────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Luồng dữ liệu
+### Data Flow
 
 #### REST API Flow
 ```
-Client → HTTP Request → Backend Controller → Service → Repository → MySQL
-                                                          ↓
-Client ← HTTP Response ← DTO ← Entity ← ───────────────────
+Client Request → Controller → Service → Repository → Database
+                                                    ↓
+Client Response ← DTO ← Business Logic ← Entity ← ─┘
 ```
 
-#### WebSocket Flow (Chat)
+#### WebSocket Flow (Real-time Chat)
 ```
-Client A → WebSocket (STOMP) → MessageController → MessageService
+Client A → WebSocket (STOMP) → MessageController
                                       ↓
                                   Save to DB
                                       ↓
-Client B ← WebSocket Broadcast ← WebSocket Endpoint
+Client B ← Broadcast ← WebSocket Broker
 ```
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Tech Stack
 
-### Backend
-| Công nghệ | Version | Mục đích |
-|-----------|---------|----------|
-| **Spring Boot** | 3.2.0 | Framework chính |
-| **Java** | 17 | Ngôn ngữ lập trình |
-| **Spring Security** | 6.x | Xác thực & phân quyền |
-| **Spring Data JPA** | 3.x | ORM & Database access |
-| **Spring WebSocket** | 6.x | Real-time communication |
-| **MySQL Connector** | 8.0 | Database driver |
-| **JWT (jjwt)** | 0.12.3 | Token authentication |
-| **ZXing** | 3.5.2 | QR Code generation |
-| **SpringDoc OpenAPI** | 2.3.0 | API documentation (Swagger) |
-| **Lombok** | Latest | Giảm boilerplate code |
-| **Maven** | 3.x | Build tool |
+### Backend Stack
 
-### Frontend
-| Công nghệ | Version | Mục đích |
-|-----------|---------|----------|
-| **Next.js** | 14.0.4 | React framework |
-| **React** | 18.2.0 | UI library |
-| **TypeScript** | 5.3.3 | Type safety |
-| **TailwindCSS** | 3.4.0 | Styling |
-| **Axios** | 1.6.2 | HTTP client |
-| **STOMP.js** | 7.2.0 | WebSocket client |
-| **SockJS** | 1.6.1 | WebSocket fallback |
-| **React Icons** | 4.12.0 | Icon library |
-| **Recharts** | 2.10.3 | Charts & graphs |
-| **qrcode.react** | 3.1.0 | QR code rendering |
-| **date-fns** | 3.0.6 | Date formatting |
-| **jwt-decode** | 4.0.0 | JWT decoding |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white) | 17 | Programming Language |
+| ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.0-6DB33F?style=flat-square&logo=spring-boot) | 3.2.0 | Backend Framework |
+| ![Spring Security](https://img.shields.io/badge/Spring_Security-6.x-6DB33F?style=flat-square&logo=spring-security) | 6.x | Security & Auth |
+| ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-3.x-6DB33F?style=flat-square) | 3.x | ORM & Database |
+| ![WebSocket](https://img.shields.io/badge/WebSocket-STOMP-010101?style=flat-square) | 6.x | Real-time Communication |
+| ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql) | 8.0 | Database |
+| ![JWT](https://img.shields.io/badge/JWT-0.12.3-000000?style=flat-square&logo=json-web-tokens) | 0.12.3 | Token Authentication |
+| ![Maven](https://img.shields.io/badge/Maven-3.x-C71A36?style=flat-square&logo=apache-maven) | 3.x | Build Tool |
+| ![Lombok](https://img.shields.io/badge/Lombok-Latest-BC4521?style=flat-square) | Latest | Code Generation |
+| ![Swagger](https://img.shields.io/badge/Swagger-2.3.0-85EA2D?style=flat-square&logo=swagger) | 2.3.0 | API Documentation |
 
-### Database
-- **MySQL 8.0** - Relational database
-  - Lưu trữ users, files (LONGBLOB), messages, posts
-  - Hỗ trợ transactions & foreign keys
-  - Tối ưu cho large file storage
+### Frontend Stack
 
-### DevOps
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **Git** - Version control
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| ![Next.js](https://img.shields.io/badge/Next.js-14.0.4-000000?style=flat-square&logo=next.js) | 14.0.4 | React Framework |
+| ![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react) | 18.2.0 | UI Library |
+| ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=flat-square&logo=typescript) | 5.3.3 | Type Safety |
+| ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=flat-square&logo=tailwind-css) | 3.4.0 | Styling Framework |
+| ![Axios](https://img.shields.io/badge/Axios-1.6-5A29E4?style=flat-square) | 1.6.2 | HTTP Client |
+| ![SockJS](https://img.shields.io/badge/SockJS-1.6-010101?style=flat-square) | 1.6.1 | WebSocket Client |
+| ![STOMP](https://img.shields.io/badge/STOMP-7.2-010101?style=flat-square) | 7.2.0 | WebSocket Protocol |
+| ![React Icons](https://img.shields.io/badge/React_Icons-4.12-E10098?style=flat-square) | 4.12.0 | Icon Library |
+| ![Recharts](https://img.shields.io/badge/Recharts-2.10-22B5BF?style=flat-square) | 2.10.3 | Charts & Graphs |
+| ![QRCode.react](https://img.shields.io/badge/QRCode-3.1-000000?style=flat-square) | 3.1.0 | QR Generation |
+
+### DevOps & Tools
+
+| Tool | Purpose |
+|------|---------|
+| ![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=flat-square&logo=docker&logoColor=white) | Containerization |
+| ![Docker Compose](https://img.shields.io/badge/Docker_Compose-Latest-2496ED?style=flat-square&logo=docker&logoColor=white) | Multi-container |
+| ![Git](https://img.shields.io/badge/Git-Latest-F05032?style=flat-square&logo=git&logoColor=white) | Version Control |
 
 ---
 
-## 📦 Cài đặt
+## 🚀 Quick Start
 
-### Yêu cầu hệ thống
+### Prerequisites
 
-- **Java 17+** (JDK)
-- **Node.js 18+** và npm/yarn
-- **MySQL 8.0+**
-- **Docker & Docker Compose** (khuyến nghị)
-- **Maven 3.6+** (nếu chạy local backend)
-- **Git**
+Ensure you have installed:
+- ✅ **Java 17+** (JDK)
+- ✅ **Node.js 18+** and npm
+- ✅ **MySQL 8.0+** (running on host, not Docker)
+- ✅ **Git**
 
-### Clone Repository
+Optional:
+- 🐳 **Docker & Docker Compose** (for containerized deployment)
+
+### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/PixShare.git
-cd PixShare
+git clone git@github.com:vanhoangtvu/PixShare-Project.git
+cd PixShare-Project
 ```
+
+### 2️⃣ Setup Database
+
+```bash
+# Start MySQL (if using Docker)
+docker run -d \
+  --name pixshare-mysql \
+  -e MYSQL_ROOT_PASSWORD=1111 \
+  -e MYSQL_DATABASE=PixShare_db \
+  -p 3306:3306 \
+  mysql:8.0
+
+# Or use existing MySQL Server
+mysql -u root -p
+CREATE DATABASE PixShare_db;
+```
+
+### 3️⃣ Configure Environment
+
+**Backend:** Edit `backend/src/main/resources/application.yml`
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/PixShare_db
+    username: root
+    password: 1111
+```
+
+**Frontend:** Create `frontend/.env.local`
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8086
+```
+
+### 4️⃣ Run Backend
+
+```bash
+cd backend
+mvn clean install
+mvn spring-boot:run
+```
+
+Backend runs at: **http://localhost:8086**  
+Swagger UI: **http://localhost:8086/swagger-ui.html**
+
+### 5️⃣ Run Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs at: **http://localhost:3006**
+
+### 6️⃣ Login
+
+Access **http://localhost:3006** and login with:
+
+- **Email:** `admin@pixshare.com`
+- **Password:** `admin123`
+
+🎉 **Done!** Explore PixShare!
 
 ---
 
-## ⚙️ Cấu hình
+## ⚙️ Configuration
 
 ### Backend Configuration
 
-Tệp cấu hình: `backend/src/main/resources/application.yml`
+File: `backend/src/main/resources/application.yml`
 
 ```yaml
 spring:
@@ -280,32 +447,32 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: update  # Tự động tạo/update database schema
+      ddl-auto: update  # Auto create/update schema
   
   servlet:
     multipart:
-      max-file-size: 1GB  # Kích thước file tối đa
+      max-file-size: 1GB
       max-request-size: 1GB
 
 server:
   port: 8086
-  url: http://localhost:8086  # URL public cho QR code, share links
+  url: http://localhost:8086  # For QR codes & share links
 
 jwt:
   secret: your-secret-key-here
   expiration: 86400000  # 24 hours
 
 file:
-  default-quota: 5368709120  # 5GB
-  max-file-size: 1073741824  # 1GB
+  default-quota: 5368709120  # 5GB per user
+  max-file-size: 1073741824  # 1GB max
 
 cors:
-  allowed-origins: http://localhost:3000
+  allowed-origins: http://localhost:3006,http://localhost:3000
 ```
 
 ### Frontend Configuration
 
-Tạo file `.env.local` trong thư mục `frontend/`:
+File: `frontend/.env.local`
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8086
@@ -313,10 +480,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8086
 
 ### Docker Configuration
 
-File `docker-compose.yml` đã được cấu hình sẵn. Có thể tùy chỉnh qua file `.env`:
+PixShare uses **host MySQL** (not Docker MySQL). The `docker-compose.yml` is configured for:
+- Backend container
+- Frontend container
+- Connection to host MySQL via `host.docker.internal`
+
+File: `.env` (root directory)
 
 ```env
-# Database
+# MySQL (on host machine)
 MYSQL_ROOT_PASSWORD=1111
 MYSQL_DATABASE=PixShare_db
 
@@ -324,104 +496,62 @@ MYSQL_DATABASE=PixShare_db
 BACKEND_PORT=8086
 FRONTEND_PORT=3006
 
-# API URL for client browser
+# API URL
 NEXT_PUBLIC_API_URL=http://localhost:8086
 
-# Server Address (for public deployment)
+# Server
 SERVER_ADDRESS=0.0.0.0
 ```
 
 ---
 
-## 🚀 Chạy ứng dụng
+## 🐳 Docker Deployment
 
-### Cách 1: Docker Compose (Khuyến nghị) 🐳
-
-Cách đơn giản nhất để chạy toàn bộ stack:
+### Quick Deploy with Docker Compose
 
 ```bash
-# Chạy tất cả services (MySQL, Backend, Frontend)
-docker-compose up -d
+# Build and start all services
+docker-compose up -d --build
 
-# Xem logs
+# View logs
 docker-compose logs -f
 
-# Dừng services
+# Stop services
 docker-compose down
 
-# Xóa cả volumes (reset database)
+# Reset everything (including data)
 docker-compose down -v
 ```
 
-**Truy cập ứng dụng:**
-- Frontend: http://localhost:3006
-- Backend API: http://localhost:8086
-- Swagger UI: http://localhost:8086/swagger-ui.html
-- MySQL: localhost:3306
+**Access:**
+- Frontend: **http://localhost:3006**
+- Backend API: **http://localhost:8086**
+- Swagger UI: **http://localhost:8086/swagger-ui.html**
 
-### Cách 2: Chạy Local (Development)
-
-#### 1. Khởi động MySQL
+### Manual Docker Commands
 
 ```bash
-# Sử dụng Docker
-docker run -d \
-  --name pixshare-mysql \
-  -e MYSQL_ROOT_PASSWORD=1111 \
-  -e MYSQL_DATABASE=PixShare_db \
-  -p 3306:3306 \
-  mysql:8.0
-
-# Hoặc sử dụng MySQL đã cài sẵn
-mysql -u root -p
-CREATE DATABASE PixShare_db;
-```
-
-#### 2. Chạy Backend
-
-```bash
+# Build backend
 cd backend
+docker build -t pixshare-backend .
 
-# Build project
-mvn clean install
-
-# Run application
-mvn spring-boot:run
-
-# Hoặc chạy JAR file
-java -jar target/pixshare-backend-1.0.0.jar
-```
-
-Backend sẽ chạy tại: http://localhost:8086
-
-#### 3. Chạy Frontend
-
-```bash
+# Build frontend
 cd frontend
+docker build -t pixshare-frontend .
 
-# Cài đặt dependencies
-npm install
+# Run backend
+docker run -d \
+  --name pixshare-backend \
+  -p 8086:8086 \
+  --add-host=host.docker.internal:host-gateway \
+  pixshare-backend
 
-# Chạy development server
-npm run dev
-
-# Hoặc build và chạy production
-npm run build
-npm start
-```
-
-Frontend sẽ chạy tại: http://localhost:3006
-
-#### 4. Khởi tạo dữ liệu mẫu
-
-Database schema sẽ tự động được tạo khi backend khởi động (JPA `ddl-auto: update`).
-
-Để thêm posts và comments tables, chạy SQL scripts:
-
-```bash
-# Trong MySQL console
-mysql -u root -p PixShare_db < backend/add_social_feed_tables.sql
-mysql -u root -p PixShare_db < backend/add_profile_fields.sql
+# Run frontend
+docker run -d \
+  --name pixshare-frontend \
+  -p 3006:3006 \
+  -e NEXT_PUBLIC_API_URL=http://localhost:8086 \
+  pixshare-frontend
 ```
 
 ---
@@ -430,32 +560,25 @@ mysql -u root -p PixShare_db < backend/add_profile_fields.sql
 
 ### Swagger UI
 
-Truy cập API documentation tại: **http://localhost:8086/swagger-ui.html**
+Interactive API docs: **http://localhost:8086/swagger-ui.html**
 
-### Các nhóm API chính
+### API Groups
 
-#### 🔐 Authentication (`/api/auth`)
+#### 🔐 Authentication `/api/auth`
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| POST | `/api/auth/register` | Đăng ký tài khoản mới | ❌ |
-| POST | `/api/auth/login` | Đăng nhập | ❌ |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/register` | Register new account | ❌ |
+| POST | `/api/auth/login` | Login & get JWT | ❌ |
 
-**Request Body - Register:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "displayName": "John Doe"
-}
-```
-
-**Request Body - Login:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+**Example - Login:**
+```bash
+curl -X POST http://localhost:8086/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@pixshare.com",
+    "password": "admin123"
+  }'
 ```
 
 **Response:**
@@ -464,117 +587,97 @@ Truy cập API documentation tại: **http://localhost:8086/swagger-ui.html**
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
-    "email": "user@example.com",
-    "displayName": "John Doe",
-    "role": "USER"
+    "email": "admin@pixshare.com",
+    "displayName": "Admin",
+    "role": "ADMIN"
   }
 }
 ```
 
-#### 👤 Users (`/api/users`)
+#### 👤 Users `/api/users`
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| GET | `/api/users/me` | Thông tin user hiện tại | ✅ |
-| GET | `/api/users/{userId}` | Thông tin user theo ID | ✅ |
-| PUT | `/api/users/profile` | Cập nhật profile | ✅ |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/users/me` | Current user info | ✅ |
+| GET | `/api/users/{userId}` | User by ID | ✅ |
+| PUT | `/api/users/profile` | Update profile | ✅ |
 | POST | `/api/users/avatar` | Upload avatar | ✅ |
-| GET | `/api/users/search?keyword={keyword}` | Tìm kiếm user | ✅ |
-| GET | `/api/users/online` | Danh sách user online | ✅ |
+| GET | `/api/users/search?keyword={keyword}` | Search users | ✅ |
+| GET | `/api/users/online` | Online users | ✅ |
 
-#### 👥 Friends (`/api/friends`)
+#### 📁 Files `/api/files`
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| GET | `/api/friends` | Danh sách bạn bè | ✅ |
-| POST | `/api/friends/request/{friendId}` | Gửi lời mời kết bạn | ✅ |
-| POST | `/api/friends/accept/{requestId}` | Chấp nhận lời mời | ✅ |
-| POST | `/api/friends/reject/{requestId}` | Từ chối lời mời | ✅ |
-| DELETE | `/api/friends/{friendshipId}` | Xóa bạn bè | ✅ |
-| GET | `/api/friends/requests/pending` | Lời mời đang chờ | ✅ |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/files` | Upload file | ✅ |
+| GET | `/api/files/{fileId}` | File info | ✅ |
+| GET | `/api/files/{fileId}/download` | Download file | ✅ |
+| GET | `/api/files/{fileId}/preview` | Preview file | ✅ |
+| GET | `/api/files/my-files` | User's files | ✅ |
+| DELETE | `/api/files/{fileId}` | Delete file | ✅ |
 
-#### 💬 Messages (`/api/messages`)
+#### 📱 Posts `/api/posts`
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| GET | `/api/messages/chat/{userId}` | Lịch sử chat với user | ✅ |
-| POST | `/api/messages/{messageId}/read` | Đánh dấu đã đọc | ✅ |
-| DELETE | `/api/messages/{messageId}` | Xóa tin nhắn | ✅ |
-| GET | `/api/messages/unread-count` | Số tin nhắn chưa đọc | ✅ |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/posts` | Create post | ✅ |
+| GET | `/api/posts` | Get feed | ✅ |
+| GET | `/api/posts/{postId}` | Post detail | ✅ |
+| PUT | `/api/posts/{postId}` | Update post | ✅ |
+| DELETE | `/api/posts/{postId}` | Delete post | ✅ |
+| POST | `/api/posts/{postId}/like` | Like post | ✅ |
+| POST | `/api/posts/{postId}/comments` | Add comment | ✅ |
+
+#### 💬 Messages `/api/messages`
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/messages/chat/{userId}` | Chat history | ✅ |
+| POST | `/api/messages/{messageId}/read` | Mark as read | ✅ |
+| DELETE | `/api/messages/{messageId}` | Delete message | ✅ |
 
 **WebSocket Endpoint:** `/ws`
 
-**Subscribe to:** `/user/queue/messages`
+```javascript
+// Connect
+const socket = new SockJS('http://localhost:8086/ws');
+const stompClient = Stomp.over(socket);
 
-**Send to:** `/app/chat.sendMessage`
+// Subscribe
+stompClient.subscribe('/user/queue/messages', (message) => {
+  console.log('New message:', JSON.parse(message.body));
+});
 
-#### 📁 Files (`/api/files`)
+// Send
+stompClient.send('/app/chat.sendMessage', {}, JSON.stringify({
+  receiverId: 2,
+  content: 'Hello!'
+}));
+```
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| POST | `/api/files` | Upload file | ✅ |
-| GET | `/api/files/{fileId}` | Thông tin file | ✅ |
-| GET | `/api/files/{fileId}/download` | Tải file | ✅ |
-| GET | `/api/files/{fileId}/preview` | Xem trước file | ✅ |
-| GET | `/api/files/{fileId}/thumbnail` | Thumbnail (ảnh) | ✅ |
-| GET | `/api/files/my-files` | Danh sách file của user | ✅ |
-| DELETE | `/api/files/{fileId}` | Xóa file | ✅ |
+#### 🔗 Public Share `/api/public`
 
-#### 📱 Posts (`/api/posts`)
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/public/share/{fileId}` | Create share link | ✅ |
+| GET | `/api/public/share/{token}` | Access shared file | ❌ |
+| GET | `/api/public/share/{token}/info` | Share info | ❌ |
+| GET | `/api/public/share/{token}/qrcode` | QR code PNG | ❌ |
 
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| POST | `/api/posts` | Tạo bài viết mới | ✅ |
-| GET | `/api/posts/feed` | Lấy feed bài viết | ✅ |
-| GET | `/api/posts/{postId}` | Chi tiết bài viết | ✅ |
-| PUT | `/api/posts/{postId}` | Cập nhật bài viết | ✅ |
-| DELETE | `/api/posts/{postId}` | Xóa bài viết | ✅ |
-| POST | `/api/posts/{postId}/like` | Like bài viết | ✅ |
-| DELETE | `/api/posts/{postId}/like` | Unlike bài viết | ✅ |
-| POST | `/api/posts/{postId}/comments` | Thêm comment | ✅ |
-| GET | `/api/posts/{postId}/comments` | Lấy comments | ✅ |
+#### 👨‍💼 Admin `/api/admin`
 
-#### 👥 Groups (`/api/groups`)
-
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| POST | `/api/groups` | Tạo group chat | ✅ |
-| GET | `/api/groups` | Danh sách groups | ✅ |
-| GET | `/api/groups/{groupId}` | Chi tiết group | ✅ |
-| PUT | `/api/groups/{groupId}` | Cập nhật group | ✅ |
-| DELETE | `/api/groups/{groupId}` | Xóa group | ✅ |
-| POST | `/api/groups/{groupId}/members` | Thêm thành viên | ✅ |
-| DELETE | `/api/groups/{groupId}/members/{userId}` | Xóa thành viên | ✅ |
-
-#### 🔗 Public Share (`/api/public`)
-
-| Method | Endpoint | Mô tả | Auth |
-|--------|----------|-------|------|
-| POST | `/api/public/share/{fileId}` | Tạo link chia sẻ | ✅ |
-| GET | `/api/public/share/{shareToken}` | Truy cập file (public) | ❌ |
-| GET | `/api/public/share/{shareToken}/info` | Thông tin share | ❌ |
-| GET | `/api/public/share/{shareToken}/qrcode` | QR code (PNG) | ❌ |
-| DELETE | `/api/public/share/{shareId}` | Vô hiệu hóa share | ✅ |
-| GET | `/api/public/shares/my-shares` | Danh sách shares của user | ✅ |
-
-#### 👨‍💼 Admin (`/api/admin`) - Chỉ ADMIN
-
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| GET | `/api/admin/dashboard/stats` | Thống kê tổng quan |
-| GET | `/api/admin/users` | Danh sách users |
-| POST | `/api/admin/users/{userId}/lock` | Khóa tài khoản |
-| POST | `/api/admin/users/{userId}/unlock` | Mở khóa tài khoản |
-| PUT | `/api/admin/users/{userId}/quota` | Cập nhật quota |
-| GET | `/api/admin/files` | Danh sách files |
-| DELETE | `/api/admin/files/{fileId}` | Xóa file |
-| GET | `/api/admin/files/top-users` | Top users theo storage |
-| GET | `/api/admin/messages/search` | Tìm kiếm messages |
-| GET | `/api/admin/logs` | Admin logs |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/admin/dashboard/stats` | Dashboard stats | ADMIN |
+| GET | `/api/admin/users` | All users | ADMIN |
+| POST | `/api/admin/users/{userId}/lock` | Lock account | ADMIN |
+| PUT | `/api/admin/users/{userId}/quota` | Update quota | ADMIN |
+| GET | `/api/admin/files` | All files | ADMIN |
+| DELETE | `/api/admin/files/{fileId}` | Delete file | ADMIN |
 
 ### Authentication Header
 
-Tất cả các API cần authentication phải gửi JWT token trong header:
+All authenticated endpoints require JWT token:
 
 ```
 Authorization: Bearer <your_jwt_token>
@@ -582,552 +685,269 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## 📂 Cấu trúc dự án
+## 📂 Project Structure
 
 ```
 PixShare/
 │
-├── backend/                          # Spring Boot Backend
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/com/pixshare/
-│   │       │   ├── config/              # Security, JWT, WebSocket config
-│   │       │   │   ├── SecurityConfig.java
-│   │       │   │   ├── JwtService.java
-│   │       │   │   ├── WebSocketConfig.java
-│   │       │   │   └── ...
-│   │       │   ├── controller/          # REST Controllers
-│   │       │   │   ├── AuthController.java
-│   │       │   │   ├── UserController.java
-│   │       │   │   ├── FileController.java
-│   │       │   │   ├── MessageController.java (WebSocket)
-│   │       │   │   ├── PostController.java
-│   │       │   │   ├── GroupController.java
-│   │       │   │   └── AdminController.java
-│   │       │   ├── dto/                 # Data Transfer Objects
-│   │       │   │   ├── LoginRequest.java
-│   │       │   │   ├── AuthResponse.java
-│   │       │   │   ├── UserResponse.java
-│   │       │   │   └── ...
-│   │       │   ├── model/               # JPA Entities
-│   │       │   │   ├── User.java
-│   │       │   │   ├── FileMetadata.java
-│   │       │   │   ├── Message.java
-│   │       │   │   ├── Post.java
-│   │       │   │   ├── Friendship.java
-│   │       │   │   └── ...
-│   │       │   ├── repository/          # Spring Data JPA Repositories
-│   │       │   │   ├── UserRepository.java
-│   │       │   │   ├── FileMetadataRepository.java
-│   │       │   │   └── ...
-│   │       │   ├── service/             # Business Logic
-│   │       │   │   ├── AuthService.java
-│   │       │   │   ├── UserService.java
-│   │       │   │   ├── FileService.java
-│   │       │   │   ├── MessageService.java
-│   │       │   │   └── ...
-│   │       │   └── PixShareApplication.java  # Main class
-│   │       └── resources/
-│   │           └── application.yml      # Configuration
-│   ├── uploads/                         # Temporary file storage
-│   ├── add_profile_fields.sql          # SQL migration
-│   ├── add_social_feed_tables.sql      # SQL migration
-│   ├── pom.xml                         # Maven dependencies
+├── backend/                      # Spring Boot Backend
+│   ├── src/main/java/com/pixshare/
+│   │   ├── config/              # Security, JWT, WebSocket
+│   │   ├── controller/          # REST Controllers
+│   │   ├── dto/                 # Data Transfer Objects
+│   │   ├── model/               # JPA Entities
+│   │   ├── repository/          # Spring Data Repositories
+│   │   ├── service/             # Business Logic
+│   │   └── PixShareApplication.java
+│   ├── src/main/resources/
+│   │   └── application.yml      # Configuration
 │   ├── Dockerfile
-│   └── README.md
+│   └── pom.xml                  # Maven dependencies
 │
-├── frontend/                         # Next.js Frontend
-│   ├── app/                          # Next.js App Router
-│   │   ├── layout.tsx                # Root layout
-│   │   ├── page.tsx                  # Home (redirect to login)
-│   │   ├── login/
-│   │   │   └── page.tsx              # Login page
-│   │   ├── register/
-│   │   │   └── page.tsx              # Register page
-│   │   ├── dashboard/                # Protected dashboard
-│   │   │   ├── layout.tsx            # Dashboard layout (sidebar)
-│   │   │   ├── page.tsx              # Dashboard home
-│   │   │   ├── files/                # File management
-│   │   │   │   └── page.tsx
-│   │   │   ├── chat/                 # Chat interface
-│   │   │   │   └── page.tsx
-│   │   │   ├── friends/              # Friends management
-│   │   │   │   └── page.tsx
-│   │   │   ├── feed/                 # Social feed
-│   │   │   │   └── page.tsx
-│   │   │   ├── groups/               # Group chat
-│   │   │   │   └── page.tsx
-│   │   │   └── profile/              # User profile
-│   │   │       ├── page.tsx          # Own profile
-│   │   │       └── [userId]/
-│   │   │           └── page.tsx      # Other user's profile
-│   │   ├── admin/                    # Admin dashboard
-│   │   │   └── page.tsx
-│   │   └── share/                    # Public share pages
-│   │       └── [token]/
-│   │           └── page.tsx
-│   ├── components/                   # React components
-│   │   ├── ConfirmDialog.tsx
-│   │   ├── NotificationContainer.tsx
-│   │   └── icons/
-│   ├── contexts/                     # React Context
-│   │   ├── AuthContext.tsx           # Authentication state
-│   │   ├── ChatContext.tsx           # WebSocket/Chat state
-│   │   └── NotificationContext.tsx   # Notifications
-│   ├── lib/                          # Utilities
-│   │   ├── api.ts                    # Axios API client
-│   │   ├── auth.ts                   # Auth helpers
-│   │   ├── notifications.ts          # Notification helpers
-│   │   └── utils.ts                  # Utility functions
+├── frontend/                    # Next.js Frontend
+│   ├── app/                     # Next.js App Router
+│   │   ├── dashboard/           # Main app pages
+│   │   │   ├── feed/           # Social feed
+│   │   │   ├── chat/           # Messaging
+│   │   │   ├── files/          # File manager
+│   │   │   ├── friends/        # Friends
+│   │   │   └── profile/        # User profile
+│   │   ├── admin/              # Admin dashboard
+│   │   ├── login/              # Login page
+│   │   └── register/           # Register page
+│   ├── components/              # React components
+│   │   ├── EmbeddedVideo.tsx   # Video embedding
+│   │   └── ConfirmDialog.tsx
+│   ├── contexts/                # React Context
+│   │   ├── AuthContext.tsx
+│   │   ├── ChatContext.tsx
+│   │   └── NotificationContext.tsx
+│   ├── lib/                     # Utilities
+│   │   ├── api.ts              # API client
+│   │   ├── auth.ts
+│   │   ├── videoUtils.ts       # Video parsing
+│   │   └── utils.ts
+│   ├── Dockerfile
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── tailwind.config.js
-│   ├── next.config.js
-│   ├── Dockerfile
-│   └── README.md
+│   └── tailwind.config.js
 │
-├── docker-compose.yml                # Docker orchestration
-├── .env                              # Environment variables
+├── docker-compose.yml           # Docker orchestration
 ├── .gitignore
-├── LICENSE
-└── README.md                         # This file
+└── README.md                    # This file
 ```
 
 ---
 
-## 🔑 Tài khoản test
+## 🔑 Test Accounts
 
-Khi khởi động lần đầu, hệ thống tự động tạo các tài khoản mẫu:
+Auto-created on first startup:
 
-### Admin
+### Admin Account
 - **Email:** `admin@pixshare.com`
 - **Password:** `admin123`
 - **Role:** ADMIN
 - **Quota:** 10GB
-- **Quyền:** Toàn quyền quản trị hệ thống
+- **Access:** Full system administration
 
-### Users
+### User Accounts
 1. **User 1**
    - Email: `user1@pixshare.com`
    - Password: `user123`
-   - Role: USER
    - Quota: 5GB
 
 2. **User 2**
    - Email: `user2@pixshare.com`
    - Password: `user123`
-   - Role: USER
    - Quota: 5GB
 
 3. **User 3**
    - Email: `user3@pixshare.com`
    - Password: `user123`
-   - Role: USER
    - Quota: 5GB
 
-> **Lưu ý:** Các user mẫu đã được tự động kết bạn với nhau để test tính năng chat và social feed.
+> **Note:** Users are pre-connected as friends for testing chat and feed features.
 
 ---
 
-## 💻 Phát triển
+## 💻 Development
 
 ### Backend Development
 
-#### Build project
 ```bash
 cd backend
+
+# Clean build
 mvn clean install
-```
 
-#### Run tests
-```bash
+# Run with live reload (DevTools)
+mvn spring-boot:run
+
+# Run tests
 mvn test
-```
 
-#### Package to JAR
-```bash
+# Package to JAR
 mvn clean package
 # Output: target/pixshare-backend-1.0.0.jar
 ```
 
-#### Hot reload (DevTools)
-Spring Boot DevTools tự động restart khi có thay đổi code.
-
-#### Database Migration
-```bash
-# Thêm social feed tables
-mysql -u root -p PixShare_db < backend/add_social_feed_tables.sql
-
-# Thêm profile fields
-mysql -u root -p PixShare_db < backend/add_profile_fields.sql
-```
-
 ### Frontend Development
 
-#### Install dependencies
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-```
 
-#### Development server
-```bash
+# Development server (with hot reload)
 npm run dev
-# Runs on http://localhost:3000
-```
+# Runs on http://localhost:3006
 
-#### Build for production
-```bash
+# Build for production
 npm run build
 npm start
-```
 
-#### Lint code
-```bash
+# Lint code
 npm run lint
+
+# Type check
+npm run type-check
 ```
-
-### Code Style & Conventions
-
-#### Backend (Java)
-- **Package naming:** `com.pixshare.<module>`
-- **Class naming:** PascalCase
-- **Method naming:** camelCase
-- **Constants:** UPPER_SNAKE_CASE
-- **Annotations:** Lombok để giảm boilerplate
-- **Exception handling:** GlobalExceptionHandler
-
-#### Frontend (TypeScript/React)
-- **Component naming:** PascalCase (e.g., `UserProfile.tsx`)
-- **Function naming:** camelCase
-- **CSS:** Tailwind utility classes
-- **State management:** React Context API
-- **Type safety:** TypeScript strict mode
 
 ### Git Workflow
 
 ```bash
 # Create feature branch
-git checkout -b feature/your-feature-name
+git checkout -b feature/amazing-feature
 
 # Commit changes
 git add .
-git commit -m "feat: add your feature description"
+git commit -m "feat: add amazing feature"
 
-# Push to remote
-git push origin feature/your-feature-name
+# Push to GitHub
+git push origin feature/amazing-feature
 
-# Create Pull Request on GitHub
+# Create Pull Request
 ```
 
----
+### Code Style
 
-## 🚢 Triển khai
+**Backend (Java):**
+- PascalCase for classes
+- camelCase for methods
+- UPPER_SNAKE_CASE for constants
+- Use Lombok annotations
 
-### Docker Production Deployment
-
-#### 1. Build images
-```bash
-docker-compose build
-```
-
-#### 2. Run containers
-```bash
-docker-compose up -d
-```
-
-#### 3. Check status
-```bash
-docker-compose ps
-docker-compose logs -f
-```
-
-#### 4. Scale services (optional)
-```bash
-docker-compose up -d --scale backend=3
-```
-
-### Manual Deployment
-
-#### Backend (JAR)
-```bash
-cd backend
-mvn clean package -DskipTests
-java -jar target/pixshare-backend-1.0.0.jar
-```
-
-#### Frontend (Next.js)
-```bash
-cd frontend
-npm run build
-npm start
-# Or use PM2 for production
-pm2 start npm --name "pixshare-frontend" -- start
-```
-
-### Environment Variables
-
-Production `.env`:
-```env
-# Database
-MYSQL_ROOT_PASSWORD=strong_password_here
-MYSQL_DATABASE=PixShare_db
-
-# Backend
-BACKEND_PORT=8080
-SERVER_ADDRESS=0.0.0.0
-JWT_SECRET=your-256-bit-secret-key-here
-
-# Frontend
-FRONTEND_PORT=3000
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-NODE_ENV=production
-```
-
-### Nginx Reverse Proxy (Optional)
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    location / {
-        proxy_pass http://localhost:3006;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    location /api {
-        proxy_pass http://localhost:8086/api;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /ws {
-        proxy_pass http://localhost:8086/ws;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
+**Frontend (TypeScript/React):**
+- PascalCase for components
+- camelCase for functions
+- Tailwind utility classes
+- TypeScript strict mode
 
 ---
 
 ## 🔒 Security
 
 ### Authentication & Authorization
-- JWT-based authentication
-- Token expiration: 24 hours
-- Password hashing with BCrypt
-- Role-based access control (USER, ADMIN)
+- ✅ JWT-based authentication
+- ✅ 24-hour token expiration
+- ✅ BCrypt password hashing
+- ✅ Role-based access (USER, ADMIN)
 
 ### API Security
-- CORS configuration
-- CSRF protection
-- SQL injection prevention (JPA Prepared Statements)
-- XSS protection
+- ✅ CORS configuration
+- ✅ CSRF protection
+- ✅ SQL injection prevention (JPA)
+- ✅ XSS protection
 
 ### File Security
-- File size limits (max 1GB)
-- User quota management (default 5GB)
-- Content type validation
-- Secure file storage in database
+- ✅ File size limits (1GB max)
+- ✅ User quota (5GB default)
+- ✅ Content type validation
+- ✅ Secure database storage
 
 ### Best Practices
-- Never commit sensitive data (`.env`, `application.yml` với passwords)
-- Use environment variables for secrets
-- Regular security updates
-- HTTPS in production
+- ⚠️ Never commit `.env` files
+- ⚠️ Use strong JWT secrets
+- ⚠️ Enable HTTPS in production
+- ⚠️ Regular dependency updates
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Backend không khởi động được
+### Backend won't start
 
-**Lỗi:** `Cannot connect to database`
+**Error:** `Cannot connect to database`
 
-**Giải pháp:**
 ```bash
-# Kiểm tra MySQL đang chạy
+# Check MySQL is running
+systemctl status mysql
+# or
 docker ps | grep mysql
 
-# Kiểm tra connection string trong application.yml
-# Đảm bảo MySQL đã tạo database
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS PixShare_db;"
+# Create database
+mysql -u root -p
+CREATE DATABASE PixShare_db;
 ```
 
-### Frontend không kết nối được Backend
+### Frontend can't connect to backend
 
-**Lỗi:** `Network Error` hoặc CORS error
+**Error:** `Network Error` or CORS
 
-**Giải pháp:**
 ```bash
-# Kiểm tra NEXT_PUBLIC_API_URL trong .env.local
-echo $NEXT_PUBLIC_API_URL
+# Check NEXT_PUBLIC_API_URL
+cat frontend/.env.local
 
-# Kiểm tra CORS trong backend application.yml
-# Thêm frontend URL vào allowed-origins
+# Check backend CORS in application.yml
+# Ensure frontend URL is in allowed-origins
 ```
 
-### WebSocket không hoạt động
+### WebSocket not working
 
-**Lỗi:** Chat không realtime
-
-**Giải pháp:**
 ```javascript
-// Kiểm tra WebSocket URL
-const WS_URL = process.env.NEXT_PUBLIC_API_URL?.replace('http', 'ws') + '/ws';
-
-// Kiểm tra backend WebSocketConfig.java
-// Đảm bảo setAllowedOrigins chứa frontend URL
+// Check WS URL format
+const WS_URL = 'http://localhost:8086/ws'; // ✅ Correct
+const WS_URL = 'ws://localhost:8086/ws';   // ❌ Wrong with SockJS
 ```
 
-### Docker build lỗi
+### Docker issues
 
-**Lỗi:** `Cannot build image`
-
-**Giải pháp:**
 ```bash
-# Xóa cache và rebuild
+# Clean rebuild
 docker-compose down -v
 docker system prune -a
-docker-compose build --no-cache
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-### MySQL out of memory
+### Large file upload fails
 
-**Lỗi:** File uploads bị lỗi với file lớn
-
-**Giải pháp:**
 ```yaml
-# Trong docker-compose.yml, tăng MySQL limits
-command: [
-  "mysqld",
-  "--max_allowed_packet=1G",
-  "--innodb_log_buffer_size=512M"
-]
+# Increase MySQL packet size in docker-compose.yml
+command: ["mysqld", "--max_allowed_packet=1G"]
 ```
 
 ---
 
-## 📊 Database Schema
+## 🤝 Contributing
 
-### Main Tables
+Contributions are welcome! 🎉
 
-#### Users Table
-```sql
-CREATE TABLE users (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  display_name VARCHAR(255),
-  bio TEXT,
-  avatar_data LONGBLOB,
-  role ENUM('USER', 'ADMIN'),
-  status ENUM('ACTIVE', 'LOCKED'),
-  storage_quota BIGINT,
-  storage_used BIGINT,
-  phone_number VARCHAR(20),
-  address TEXT,
-  date_of_birth DATE,
-  website_url VARCHAR(255),
-  facebook_url VARCHAR(255),
-  twitter_url VARCHAR(255),
-  instagram_url VARCHAR(255),
-  linkedin_url VARCHAR(255),
-  current_job VARCHAR(255),
-  company VARCHAR(255),
-  school VARCHAR(255),
-  university VARCHAR(255),
-  hometown VARCHAR(255),
-  relationship_status VARCHAR(50),
-  languages VARCHAR(255),
-  interests VARCHAR(300),
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-```
+### How to Contribute
 
-#### File Metadata Table
-```sql
-CREATE TABLE file_metadata (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  filename VARCHAR(255),
-  original_filename VARCHAR(255),
-  file_size BIGINT,
-  content_type VARCHAR(100),
-  category ENUM('IMAGE', 'VIDEO', 'DOCUMENT'),
-  file_data LONGBLOB,
-  thumbnail_data LONGBLOB,
-  user_id BIGINT,
-  upload_date TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-```
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`)
+3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** to the branch (`git push origin feature/AmazingFeature`)
+5. **Open** a Pull Request
 
-#### Messages Table
-```sql
-CREATE TABLE messages (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  sender_id BIGINT,
-  receiver_id BIGINT,
-  group_id BIGINT,
-  content TEXT,
-  type ENUM('TEXT', 'FILE', 'IMAGE'),
-  file_id BIGINT,
-  status ENUM('SENT', 'DELIVERED', 'READ'),
-  created_at TIMESTAMP,
-  FOREIGN KEY (sender_id) REFERENCES users(id),
-  FOREIGN KEY (receiver_id) REFERENCES users(id),
-  FOREIGN KEY (file_id) REFERENCES file_metadata(id)
-);
-```
+### Development Guidelines
 
-#### Posts Table
-```sql
-CREATE TABLE posts (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT,
-  content TEXT,
-  file_id BIGINT,
-  privacy ENUM('PUBLIC', 'FRIENDS_ONLY', 'PRIVATE'),
-  like_count INT DEFAULT 0,
-  comment_count INT DEFAULT 0,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (file_id) REFERENCES file_metadata(id)
-);
-```
-
----
-
-## 🤝 Đóng góp
-
-Mọi đóng góp đều được chào đón! 
-
-### Cách đóng góp
-
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request
-
-### Coding Guidelines
-
-- Viết code rõ ràng, dễ hiểu
-- Thêm comments cho logic phức tạp
-- Viết tests cho features mới
+- Write clean, maintainable code
+- Add comments for complex logic
+- Write tests for new features
 - Follow existing code style
-- Update documentation khi cần
+- Update documentation
 
 ---
 
@@ -1135,12 +955,13 @@ Mọi đóng góp đều được chào đón!
 
 ### Version 1.0.0 (2024)
 - ✅ Initial release
-- ✅ User authentication & authorization
-- ✅ File upload & management
-- ✅ Real-time chat with WebSocket
+- ✅ User authentication & profiles
+- ✅ Real-time chat (WebSocket)
 - ✅ Social feed (posts, likes, comments)
-- ✅ Group chat
-- ✅ Public file sharing with QR code
+- ✅ File management (up to 1GB)
+- ✅ **Video autoplay with audio**
+- ✅ **Embedded videos** (YouTube, TikTok, Vimeo)
+- ✅ Public sharing with QR codes
 - ✅ Admin dashboard
 - ✅ Docker support
 
@@ -1148,7 +969,7 @@ Mọi đóng góp đều được chào đón!
 
 ## 📄 License
 
-MIT License
+**MIT License**
 
 Copyright (c) 2024 Nguyen Van Hoang
 
@@ -1172,51 +993,77 @@ SOFTWARE.
 
 ---
 
-## 👥 Authors
+## 👨‍💻 About The Developer
 
-### 👨‍💻 Nguyen Van Hoang
+### Nguyen Van Hoang
 **Backend Developer | Java Spring Boot Specialist**
 
-- 🌟 Passionate backend developer who loves crafting robust and scalable web applications
-- 🔨 Currently working with **Spring Boot** and **Java**
-- 📚 Learning **Microservices Architecture** and **Cloud Technologies**
-- 💼 Experience in building **REST APIs** and **Database Design**
-- 🎯 Core Technologies: Java, Spring Boot, MySQL, Hibernate, JWT, WebSocket
+<div align="center">
 
-**Connect with me:**
-- 📧 Email: [nguyenhoang4556z@gmail.com](mailto:nguyenhoang4556z@gmail.com)
-- 📱 Phone: 0889559357
-- 💻 GitHub: [@vanhoangtvu](https://github.com/vanhoangtvu)
+[![GitHub](https://img.shields.io/badge/GitHub-vanhoangtvu-181717?style=for-the-badge&logo=github)](https://github.com/vanhoangtvu)
+[![Email](https://img.shields.io/badge/Email-nguyenhoang4556z@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:nguyenhoang4556z@gmail.com)
+[![Phone](https://img.shields.io/badge/Phone-0889559357-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](tel:0889559357)
+
+</div>
+
+**About Me:**
+- 🌟 Passionate about building robust and scalable applications
+- 🔨 Specialized in **Spring Boot**, **MySQL**, and **RESTful APIs**
+- 📚 Currently learning **Microservices** and **Cloud Technologies**
+- 💼 Experience in **Backend Development** and **Database Design**
+- 🎯 Core Skills: Java, Spring Boot, MySQL, WebSocket, JWT, Docker
+
+**What I Do:**
+- 🚀 Build high-performance backend systems
+- 🔒 Implement secure authentication & authorization
+- 📡 Develop real-time features with WebSocket
+- 🗄️ Design efficient database schemas
+- 🐳 Deploy applications with Docker
+
+---
+
+## 📞 Support & Contact
+
+Need help or have questions?
+
+<div align="center">
+
+[![Email](https://img.shields.io/badge/Email-nguyenhoang4556z@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:nguyenhoang4556z@gmail.com)
+[![Phone](https://img.shields.io/badge/Phone-0889559357-25D366?style=for-the-badge&logo=phone&logoColor=white)](tel:0889559357)
+[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-181717?style=for-the-badge&logo=github)](https://github.com/vanhoangtvu/PixShare-Project/issues)
+
+**Response Time:** Usually within 24 hours  
+**Languages:** Vietnamese (native), English
+
+</div>
 
 ---
 
 ## 🙏 Acknowledgments
 
+Special thanks to:
 - Spring Boot Team
-- Next.js Team
+- Next.js & Vercel Team
 - React Community
-- MySQL
-- All open source contributors
-
----
-
-## 📞 Support
-
-Nếu bạn gặp vấn đề hoặc có câu hỏi:
-
-- 📧 Email: [nguyenhoang4556z@gmail.com](mailto:nguyenhoang4556z@gmail.com)
-- 📱 Phone: 0889559357
-- 💻 GitHub: [@vanhoangtvu](https://github.com/vanhoangtvu)
-- 🐛 Issues: [GitHub Issues](https://github.com/vanhoangtvu/PixShare/issues)
-- 📖 Documentation: [Project Wiki](https://github.com/vanhoangtvu/PixShare/wiki)
+- MySQL Team
+- TailwindCSS Team
+- All Open Source Contributors
 
 ---
 
 <div align="center">
 
-**⭐ Đừng quên star repo nếu project hữu ích! ⭐**
+## ⭐ Star This Repository!
 
-Made with ❤️ by [Nguyen Van Hoang](https://github.com/vanhoangtvu)
+**If you find PixShare useful, please give it a star!**
+
+[![GitHub stars](https://img.shields.io/github/stars/vanhoangtvu/PixShare-Project?style=social)](https://github.com/vanhoangtvu/PixShare-Project/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/vanhoangtvu/PixShare-Project?style=social)](https://github.com/vanhoangtvu/PixShare-Project/network/members)
+
+---
+
+**Made with ❤️ by [Nguyen Van Hoang](https://github.com/vanhoangtvu)**
+
+© 2024 PixShare. All rights reserved.
 
 </div>
-
