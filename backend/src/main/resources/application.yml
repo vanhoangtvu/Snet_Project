@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: pixshare-backend
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/PixShare_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
+    username: root
+    password: 1111
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 300000  # 5 minutes
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 600000  # 10 minutes
+      max-lifetime: 1800000  # 30 minutes
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        # Optimize for large BLOB operations
+        connection:
+          provider_disables_autocommit: false
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1GB
+      max-request-size: 1GB
+      file-size-threshold: 10MB  # Files larger than this will be written to disk
+      location: /tmp  # Temporary storage location
+    # Optimize response buffer for 8MB/s download speed
+    encoding:
+      charset: UTF-8
+      force: false
+
+server:
+  port: 8086
+  address: 0.0.0.0
+  url: http://113.170.159.180:8086
+  error:
+    include-message: always
+    include-binding-errors: always
+  # Optimize for large file transfers and downloads
+  tomcat:
+    max-swallow-size: -1  # No limit on request body size
+    max-http-post-size: -1  # No limit on POST size
+    connection-timeout: 600000  # 10 minutes timeout for large uploads
+    keep-alive-timeout: 600000  # 10 minutes keep-alive
+    max-keep-alive-requests: 100
+    threads:
+      max: 200  # Increase thread pool for concurrent uploads/downloads
+      min-spare: 10
+    accept-count: 100
+    max-connections: 10000
+    # Network performance tuning for 8MB/s throughput
+    max-http-header-size: 65536  # 64KB headers
+  # Optimize download speed
+  compression:
+    enabled: false  # Disable for video/binary files (already compressed)
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 2048
+
+# JWT Configuration
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000 # 24 hours
+
+# File Storage Configuration
+file:
+  default-quota: 5368709120 # 5GB in bytes
+  max-file-size: 1073741824 # 1GB in bytes
+
+# CORS Configuration
+cors:
+  allowed-origins: http://localhost:3006,http://113.170.159.180:3006,http://113.170.159.180:8086
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+logging:
+  level:
+    com.pixshare: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
