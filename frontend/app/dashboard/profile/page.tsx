@@ -401,9 +401,14 @@ export default function ProfilePage() {
                     >
                       {post.fileUrl && post.fileType?.startsWith('image/') && (
                         <img 
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                          src={`${process.env.NEXT_PUBLIC_API_URL}/api/files/${post.fileId}/thumbnail`}
                           alt="Post media"
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`;
+                          }}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform brightness-110 contrast-110"
+                          style={{ filter: 'brightness(1.1) contrast(1.1)', imageOrientation: 'auto' }}
+                          loading="lazy"
                         />
                       )}
                       {post.fileUrl && post.fileType?.startsWith('video/') && (
@@ -460,9 +465,15 @@ export default function ProfilePage() {
                         <p className="text-sm md:text-base mb-2">{post.content}</p>
                         {post.fileUrl && (
                           <img 
-                            src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                            src={`${process.env.NEXT_PUBLIC_API_URL}/api/files/${post.fileId}/thumbnail`}
                             alt="Post"
-                            className="w-full max-h-96 object-cover rounded-lg mb-2"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`;
+                            }}
+                            className="w-full max-h-96 object-cover rounded-lg mb-2 cursor-pointer hover:opacity-100 brightness-110 contrast-110"
+                            style={{ filter: 'brightness(1.1) contrast(1.1)', imageOrientation: 'auto' }}
+                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
+                            loading="lazy"
                           />
                         )}
                         <div className="flex gap-6 text-gray-400 text-sm">

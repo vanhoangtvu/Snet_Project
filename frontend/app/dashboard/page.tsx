@@ -816,10 +816,15 @@ export default function DashboardPage() {
                       <div className="mb-3 max-h-[70vh] overflow-hidden bg-black">
                         {post.fileType?.startsWith('image/') ? (
                           <img 
-                            src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
-                            alt="Post image" 
-                            className="w-full max-h-[70vh] object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                            src={`${process.env.NEXT_PUBLIC_API_URL}/api/files/${post.fileId}/thumbnail`}
+                            alt="Post image"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`;
+                            }}
+                            className="w-full max-h-[70vh] object-contain cursor-pointer hover:opacity-100 transition-opacity brightness-110 contrast-110"
+                            style={{ filter: 'brightness(1.1) contrast(1.1)', imageOrientation: 'auto' }}
                             onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
+                            loading="lazy"
                           />
                         ) : post.fileType?.startsWith('video/') ? (
                           <video 

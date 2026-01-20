@@ -87,14 +87,14 @@ public class FileService {
                 .fileName(file.getOriginalFilename())
                 .fileType(contentType)
                 .fileSize(file.getSize())
-                .fileData(file.getBytes())
+                .fileData(category == FileCategory.IMAGE ? rotateImageByExif(file.getBytes()) : file.getBytes())
                 .category(category)
                 .description(description)
                 .build();
         
         // Generate thumbnail for images
         if (category == FileCategory.IMAGE) {
-            fileMetadata.setThumbnail(generateThumbnail(file.getBytes()));
+            fileMetadata.setThumbnail(generateThumbnail(fileMetadata.getFileData()));
         }
         
         fileMetadata = fileMetadataRepository.save(fileMetadata);
@@ -239,6 +239,81 @@ public class FileService {
         }
     }
     
+    private byte[] rotateImageByExif(byte[] imageData) throws IOException {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(imageData);
+            BufferedImage image = ImageIO.read(bais);
+            
+            if (image == null) return imageData;
+            
+            // Đọc EXIF orientation
+            com.drew.metadata.Metadata metadata = com.drew.imaging.ImageMetadataReader.readMetadata(new ByteArrayInputStream(imageData));
+            com.drew.metadata.exif.ExifIFD0Directory exifDir = metadata.getFirstDirectoryOfType(com.drew.metadata.exif.ExifIFD0Directory.class);
+            
+            if (exifDir == null || !exifDir.containsTag(com.drew.metadata.exif.ExifIFD0Directory.TAG_ORIENTATION)) {
+                System.out.println("✅ No EXIF orientation found");
+                return imageData;
+            }
+            
+            int orientation = exifDir.getInt(com.drew.metadata.exif.ExifIFD0Directory.TAG_ORIENTATION);
+            System.out.println("🔄 EXIF Orientation: " + orientation);
+            BufferedImage rotatedImage = image;
+            
+            switch (orientation) {
+                case 3: // 180 độ
+                    System.out.println("🔄 Rotating 180°");
+                    rotatedImage = rotateImage(image, 180);
+                    break;
+                case 6: // 90 độ phải
+                    System.out.println("🔄 Rotating 90° right");
+                    rotatedImage = rotateImage(image, 90);
+                    break;
+                case 8: // 90 độ trái
+                    System.out.println("🔄 Rotating 90° left");
+                    rotatedImage = rotateImage(image, 270);
+                    break;
+            }
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(rotatedImage, "jpg", baos);
+            System.out.println("✅ Image rotated and saved");
+            return baos.toByteArray();
+        } catch (Exception e) {
+            System.out.println("❌ EXIF rotation error: " + e.getMessage());
+            return imageData;
+        }
+    }
+    
+    private BufferedImage rotateImage(BufferedImage image, int angle) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage rotated;
+        
+        if (angle == 90 || angle == 270) {
+            rotated = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+        } else {
+            rotated = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        }
+        
+        Graphics2D g2d = rotated.createGraphics();
+        
+        if (angle == 90) {
+            g2d.translate(height, 0);
+            g2d.rotate(Math.toRadians(90));
+        } else if (angle == 180) {
+            g2d.translate(width, height);
+            g2d.rotate(Math.toRadians(180));
+        } else if (angle == 270) {
+            g2d.translate(0, width);
+            g2d.rotate(Math.toRadians(270));
+        }
+        
+        g2d.drawImage(image, 0, 0, null);
+        g2d.dispose();
+        
+        return rotated;
+    }
+    
     private byte[] generateThumbnail(byte[] imageData) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(imageData);
         BufferedImage originalImage = ImageIO.read(bais);
@@ -247,7 +322,7 @@ public class FileService {
             return null;
         }
         
-        int thumbnailWidth = 200;
+        int thumbnailWidth = 400;
         int thumbnailHeight = (int) (originalImage.getHeight() * ((double) thumbnailWidth / originalImage.getWidth()));
         
         BufferedImage thumbnail = new BufferedImage(thumbnailWidth, thumbnailHeight, BufferedImage.TYPE_INT_RGB);

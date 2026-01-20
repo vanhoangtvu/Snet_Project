@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/public/**", "/ws/**").permitAll()
                         .requestMatchers("/api/users/*/avatar", "/api/users/*/cover").permitAll()
-                        .requestMatchers("/api/files/*/public-preview").permitAll()
+                        .requestMatchers("/api/files/*/public-preview", "/api/files/*/thumbnail").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/video/*/stream").authenticated()
@@ -62,7 +62,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        String[] origins = allowedOrigins.split(",");
+        for (int i = 0; i < origins.length; i++) {
+            origins[i] = origins[i].trim();
+        }
+        configuration.setAllowedOrigins(Arrays.asList(origins));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(Arrays.asList(
