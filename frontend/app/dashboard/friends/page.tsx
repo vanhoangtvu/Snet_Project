@@ -1,338 +1,437 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { apiService } from '@/lib/api';
-import { useNotification } from '@/contexts/NotificationContext';
+import { SnetLogo } from '@/components/icons/SnetIcon';
 import { 
-  FriendsIcon, 
-  SearchIcon, 
-  AddIcon, 
-  CheckIcon, 
-  CloseIcon, 
-  ProfileIcon, 
-  ChatIcon, 
-  VerifiedIcon 
-} from '@/components/icons/Icons';
+  FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
+  FiMenu, FiLogOut, FiSettings, FiUser, FiUserPlus, FiUserCheck, FiUserX
+} from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { apiService } from '@/lib/api';
 
 interface User {
   id: number;
-  email: string;
   displayName: string;
-  online: boolean;
-  verified: boolean;
+  email: string;
 }
 
 interface FriendRequest {
   id: number;
-  sender: User;    // Người gửi lời mời
-  receiver: User;  // Người nhận lời mời
-  status: string;
-  createdAt: string;
+  userId: number;
+  userDisplayName: string;
+  userEmail: string;
 }
 
 export default function FriendsPage() {
+  const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { success, error: showError, warning, info } = useNotification();
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [friends, setFriends] = useState<User[]>([]);
-  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'search'>('friends');
 
   useEffect(() => {
-    loadFriends();
-    loadRequests();
-  }, []);
-
-  const loadFriends = async () => {
-    try {
-      const data = await apiService.getFriendsList();
-      setFriends(data);
-    } catch (error) {
-      console.error('Failed to load friends:', error);
+    // Chờ auth loading xong
+    if (authLoading) {
+      return;
     }
-  };
 
-  const loadRequests = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    
+    loadData();
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [user, router, authLoading]);
+
+  const loadData = async () => {
     try {
-      const data = await apiService.getPendingRequests();
-      setRequests(data);
+      setLoading(true);
+      const [friendsData, requestsData] = await Promise.all([
+        apiService.getFriendsList(),
+        apiService.getPendingRequests()
+      ]);
+      setFriends(friendsData);
+      setPendingRequests(requestsData);
     } catch (error) {
-      console.error('Failed to load requests:', error);
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSearch = async () => {
-    if (!searchKeyword.trim()) return;
-
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
     try {
-      const data = await apiService.searchUsers(searchKeyword);
-      setSearchResults(data);
+      const results = await apiService.searchUsers(searchQuery);
+      const filtered = results.filter((u: User) => 
+        u.id !== user?.id && !friends.some(f => f.id === u.id)
+      );
+      setSearchResults(filtered);
     } catch (error) {
-      console.error('Failed to search users:', error);
+      console.error('Search failed:', error);
     }
   };
 
-  const handleSendRequest = async (userId: number) => {
+  const handleSendRequest = async (friendId: number) => {
     try {
-      console.log('Sending friend request to user:', userId);
-      await apiService.sendFriendRequest(userId);
-      success('Gửi lời mời thành công', 'Lời mời kết bạn đã được gửi!');
-      setSearchResults([]);
-      setSearchKeyword('');
-      await loadRequests(); // Reload to see sent requests
-    } catch (error: any) {
-      console.error('Send friend request error:', error);
-      const message = error.response?.data?.message || error.message || 'Gửi lời mời thất bại';
-      showError('Gửi lời mời thất bại', message);
+      await apiService.sendFriendRequest(friendId);
+      setSearchResults(searchResults.filter(u => u.id !== friendId));
+    } catch (error) {
+      console.error('Failed to send request:', error);
     }
   };
 
   const handleAcceptRequest = async (requestId: number) => {
     try {
       await apiService.acceptFriendRequest(requestId);
-      await loadFriends();
-      await loadRequests();
-      success('Chấp nhận thành công', 'Đã chấp nhận lời mời kết bạn!');
-    } catch (error: any) {
-      showError('Chấp nhận thất bại', error.response?.data?.message || 'Không thể chấp nhận lời mời');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to accept request:', error);
     }
   };
 
   const handleRejectRequest = async (requestId: number) => {
     try {
       await apiService.rejectFriendRequest(requestId);
-      await loadRequests();
-      success('Từ chối thành công', 'Đã từ chối lời mời kết bạn!');
-    } catch (error: any) {
-      showError('Từ chối thất bại', error.response?.data?.message || 'Không thể từ chối lời mời');
+      setPendingRequests(pendingRequests.filter(r => r.id !== requestId));
+    } catch (error) {
+      console.error('Failed to reject request:', error);
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
+  const getUserInitial = (name: string) => {
+    return name?.charAt(0).toUpperCase() || '?';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Đang tải...</div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6 sm:mb-8">
-        <FriendsIcon size={32} className="text-primary-600" />
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Bạn bè</h1>
+    <div className="min-h-screen bg-black text-white pb-16 md:pb-0">
+      {/* Header - Same as Dashboard */}
+      <header className="sticky top-0 z-[100] bg-black/95 backdrop-blur-md border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-3 md:px-4 h-14 md:h-16 flex items-center justify-between">
+          {/* Left */}
+          <div className="flex items-center gap-4">
+            <SnetLogo size="md" className="text-primary-500" />
+            <div className="hidden sm:flex items-center bg-white/5 rounded-full px-4 py-2 gap-2 border border-gray-700">
+              <FiSearch className="w-5 h-5 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm..." 
+                className="bg-transparent border-none outline-none text-sm w-48"
+              />
+            </div>
+          </div>
+
+          {/* Center - Navigation */}
+          <nav className="hidden md:flex items-center gap-2">
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <FiHome className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => router.push('/dashboard/friends')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors border-b-2 border-primary-500"
+            >
+              <FiUsers className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => router.push('/dashboard/chat')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <FiMessageSquare className="w-6 h-6" />
+            </button>
+          </nav>
+
+          {/* Right */}
+
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+              <FiBell className="w-5 h-5 md:w-6 md:h-6" />
+            </button>
+            <div className="relative user-menu-container">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base"
+              >
+                {user?.displayName?.charAt(0).toUpperCase()}
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-xl border border-gray-700 py-2">
+                  <button
+                    onClick={() => router.push('/dashboard/profile')}
+                    className="w-full px-4 py-2 text-left hover:bg-white/5 flex items-center gap-2"
+                  >
+                    <FiUser className="w-4 h-4" />
+                    Trang cá nhân
+                  </button>
+                  <button
+                    onClick={() => router.push('/dashboard/settings')}
+                    className="w-full px-4 py-2 text-left hover:bg-white/5 flex items-center gap-2"
+                  >
+                    <FiSettings className="w-4 h-4" />
+                    Cài đặt
+                  </button>
+                  <hr className="my-2 border-gray-700" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-left hover:bg-white/5 flex items-center gap-2 text-red-400"
+                  >
+                    <FiLogOut className="w-4 h-4" />
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
+        <div className="max-w-2xl mx-auto">
+          {/* Tabs */}
+          <div className="bg-white/5 rounded-xl p-1 mb-4 md:mb-6 flex gap-1">
+            <button
+              onClick={() => setActiveTab('friends')}
+              className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold text-sm md:text-base transition-all ${
+                activeTab === 'friends'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <FiUsers className="inline mr-1 md:mr-2 w-4 h-4 md:w-5 md:h-5" />
+              Bạn bè ({friends.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold text-sm md:text-base transition-all relative ${
+                activeTab === 'requests'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <FiUserPlus className="inline mr-1 md:mr-2 w-4 h-4 md:w-5 md:h-5" />
+              Lời mời ({pendingRequests.length})
+              {pendingRequests.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('search')}
+              className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold text-sm md:text-base transition-all ${
+                activeTab === 'search'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <FiSearch className="inline mr-1 md:mr-2 w-4 h-4 md:w-5 md:h-5" />
+              Tìm kiếm
+            </button>
+          </div>
+
+          {/* Friends List */}
+          {activeTab === 'friends' && (
+            <div className="space-y-3">
+              {friends.length === 0 ? (
+                <div className="bg-white/5 rounded-xl p-8 md:p-12 text-center">
+                  <FiUsers className="mx-auto text-4xl md:text-5xl mb-4 opacity-50" />
+                  <p className="text-gray-400 mb-4">Chưa có bạn bè nào</p>
+                  <button
+                    onClick={() => setActiveTab('search')}
+                    className="px-4 md:px-6 py-2 bg-primary-500 rounded-lg font-semibold hover:shadow-lg transition-all text-sm md:text-base"
+                  >
+                    Tìm bạn bè
+                  </button>
+                </div>
+              ) : (
+                friends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
+                        {getUserInitial(friend.displayName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{friend.displayName}</h3>
+                        <p className="text-xs md:text-sm text-gray-400 truncate">{friend.email}</p>
+                      </div>
+                      <button
+                        onClick={() => router.push(`/dashboard/chat?userId=${friend.id}`)}
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-primary-500 hover:bg-primary-600 rounded-lg font-semibold transition-all text-xs md:text-sm flex-shrink-0"
+                      >
+                        Nhắn tin
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Pending Requests */}
+          {activeTab === 'requests' && (
+            <div className="space-y-3">
+              {pendingRequests.length === 0 ? (
+                <div className="bg-white/5 rounded-xl p-8 md:p-12 text-center">
+                  <FiUserPlus className="mx-auto text-4xl md:text-5xl mb-4 opacity-50" />
+                  <p className="text-gray-400">Không có lời mời kết bạn nào</p>
+                </div>
+              ) : (
+                pendingRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
+                        {getUserInitial(request.userDisplayName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{request.userDisplayName}</h3>
+                        <p className="text-xs md:text-sm text-gray-400 truncate">{request.userEmail}</p>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleAcceptRequest(request.id)}
+                          className="p-2 bg-green-500 hover:bg-green-600 rounded-lg transition-all"
+                          title="Chấp nhận"
+                        >
+                          <FiUserCheck className="text-lg md:text-xl" />
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(request.id)}
+                          className="p-2 bg-red-500 hover:bg-red-600 rounded-lg transition-all"
+                          title="Từ chối"
+                        >
+                          <FiUserX className="text-lg md:text-xl" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Search */}
+          {activeTab === 'search' && (
+            <div>
+              <div className="flex gap-2 mb-4 md:mb-6">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="Tìm kiếm theo tên hoặc email..."
+                  className="flex-1 bg-white/5 border border-gray-700 rounded-xl px-4 py-2 md:py-3 focus:outline-none focus:border-primary-500 transition-all text-sm md:text-base"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="px-4 md:px-6 py-2 md:py-3 bg-primary-500 rounded-xl font-semibold hover:shadow-lg transition-all flex-shrink-0"
+                >
+                  <FiSearch className="text-lg md:text-xl" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {searchResults.length === 0 && searchQuery && (
+                  <div className="bg-white/5 rounded-xl p-8 md:p-12 text-center">
+                    <p className="text-gray-400">Không tìm thấy kết quả</p>
+                  </div>
+                )}
+                {searchResults.map((user) => (
+                  <div
+                    key={user.id}
+                    className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-orange-500 to-pink-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
+                        {getUserInitial(user.displayName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{user.displayName}</h3>
+                        <p className="text-xs md:text-sm text-gray-400 truncate">{user.email}</p>
+                      </div>
+                      <button
+                        onClick={() => handleSendRequest(user.id)}
+                        className="px-3 md:px-4 py-1.5 md:py-2 bg-primary-500 rounded-lg font-semibold hover:shadow-lg transition-all text-xs md:text-sm flex-shrink-0"
+                      >
+                        <FiUserPlus className="inline mr-1 md:mr-2 w-3 h-3 md:w-4 md:h-4" />
+                        Kết bạn
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Search Section */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <SearchIcon size={24} className="text-primary-600" />
-          <h2 className="text-lg sm:text-xl font-semibold">Tìm kiếm người dùng</h2>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <SearchIcon size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Nhập tên hoặc email..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          <button
-            onClick={handleSearch}
-            className="flex items-center justify-center gap-2 px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm sm:text-base transition-colors"
+      {/* Mobile Bottom Nav - Same as Dashboard */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-gray-800 px-4 py-2 z-[100]">
+        <div className="flex items-center justify-around">
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="p-3 hover:text-primary-500 transition-colors"
           >
-            <SearchIcon size={18} />
-            <span>Tìm kiếm</span>
+            <FiHome className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={() => router.push('/dashboard/friends')}
+            className="p-3 text-primary-500"
+          >
+            <FiUsers className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={() => router.push('/dashboard/chat')}
+            className="p-3 hover:text-primary-500 transition-colors"
+          >
+            <FiMessageSquare className="w-6 h-6" />
+          </button>
+          <button className="p-3 hover:text-primary-500 transition-colors">
+            <FiBell className="w-6 h-6" />
+          </button>
+          <button className="p-3 hover:text-primary-500 transition-colors">
+            <FiMenu className="w-6 h-6" />
           </button>
         </div>
-
-        {searchResults.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {searchResults.map((user) => (
-              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-3">
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={apiService.getUserAvatar(user.id)}
-                      alt={user.displayName}
-                      className="w-12 h-12 rounded-full object-cover bg-primary-500"
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent && !parent.querySelector('.avatar-fallback')) {
-                          const fallback = document.createElement('div');
-                          fallback.className = 'avatar-fallback w-12 h-12 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold';
-                          fallback.textContent = user.displayName.charAt(0).toUpperCase();
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                    {user.online && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                    )}
-                  </div>
-                  {/* User Info */}
-                  <div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-sm sm:text-base">{user.displayName}</span>
-                      {user.verified && (
-                        <VerifiedIcon size={18} className="ml-1 text-blue-500" />
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 break-all">{user.email}</div>
-                  </div>
-                </div>
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => router.push(`/dashboard/profile/${user.id}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm transition-colors"
-                  >
-                    <ProfileIcon size={18} />
-                    <span>Xem hồ sơ</span>
-                  </button>
-                  <button
-                    onClick={() => handleSendRequest(user.id)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-sm transition-colors"
-                  >
-                    <AddIcon size={18} />
-                    <span>Kết bạn</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Friend Requests */}
-      {requests.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4">Lời mời kết bạn ({requests.length})</h2>
-          <div className="space-y-3">
-            {requests.map((request) => (
-              <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg gap-3">
-                <div className="flex items-center space-x-3">
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={apiService.getUserAvatar(request.sender.id)}
-                      alt={request.sender.displayName}
-                      className="w-12 h-12 rounded-full object-cover bg-primary-500"
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent && !parent.querySelector('.avatar-fallback')) {
-                          const fallback = document.createElement('div');
-                          fallback.className = 'avatar-fallback w-12 h-12 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold text-lg';
-                          fallback.textContent = request.sender.displayName.charAt(0).toUpperCase();
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center">
-                      <span className="font-medium text-sm sm:text-base truncate">{request.sender.displayName}</span>
-                      {request.sender.verified && (
-                        <VerifiedIcon size={16} className="ml-1 flex-shrink-0 text-blue-500" />
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 truncate">{request.sender.email}</div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(request.createdAt).toLocaleString('vi-VN')}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleAcceptRequest(request.id)}
-                    className="flex items-center justify-center gap-1 flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm transition-colors"
-                  >
-                    <CheckIcon size={18} />
-                    <span>Chấp nhận</span>
-                  </button>
-                  <button
-                    onClick={() => handleRejectRequest(request.id)}
-                    className="flex items-center justify-center gap-1 flex-1 sm:flex-none px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm transition-colors"
-                  >
-                    <CloseIcon size={18} />
-                    <span>Từ chối</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Friends List */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h2 className="text-lg sm:text-xl font-semibold mb-4">Danh sách bạn bè ({friends.length})</h2>
-        {friends.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {friends.map((friend) => (
-              <div key={friend.id} className="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                <div className="flex items-center mb-3">
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={apiService.getUserAvatar(friend.id)}
-                      alt={friend.displayName}
-                      className="w-12 h-12 rounded-full object-cover bg-primary-500"
-                      onError={(e) => {
-                        const target = e.currentTarget as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent && !parent.querySelector('.avatar-fallback')) {
-                          const fallback = document.createElement('div');
-                          fallback.className = 'avatar-fallback w-12 h-12 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold text-lg';
-                          fallback.textContent = friend.displayName.charAt(0).toUpperCase();
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                    {friend.online && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="ml-3 flex-1 min-w-0">
-                    <div className="flex items-center">
-                      <span className="font-medium text-sm sm:text-base truncate">{friend.displayName}</span>
-                      {friend.verified && (
-                        <VerifiedIcon size={16} className="ml-1 flex-shrink-0 text-blue-500" />
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600 truncate">{friend.email}</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                      <span className={`inline-block w-2 h-2 rounded-full ${friend.online ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                      {friend.online ? 'Đang hoạt động' : 'Ngoại tuyến'}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => router.push(`/dashboard/profile/${friend.id}`)}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 text-xs sm:text-sm transition-colors"
-                  >
-                    <ProfileIcon size={16} />
-                    <span>Xem trang cá nhân</span>
-                  </button>
-                  <button
-                    onClick={() => router.push(`/dashboard/chat?user=${friend.id}`)}
-                    className="flex items-center justify-center gap-2 flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs sm:text-sm transition-colors"
-                  >
-                    <ChatIcon size={16} />
-                    <span>Nhắn tin</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center text-gray-500 py-8 text-sm">
-            Chưa có bạn bè. Hãy tìm kiếm và kết bạn!
-          </div>
-        )}
-      </div>
+      </nav>
     </div>
   );
 }

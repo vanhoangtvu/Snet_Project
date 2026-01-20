@@ -1,11 +1,12 @@
 {
-  "name": "pixshare-frontend",
-  "version": "1.0.0",
+  "name": "snet-frontend",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 3006",
-    "build": "next build",
-    "start": "next start -H 0.0.0.0 -p 3006",
+    "setup": "node get-server-ip.js",
+    "dev": "npm run setup && next dev -H 0.0.0.0 -p 3006",
+    "build": "npm run setup && next build",
+    "start": "npm run setup && next start -H 0.0.0.0 -p 3006",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,6 +14,7 @@
     "axios": "1.6.2",
     "date-fns": "3.0.6",
     "jwt-decode": "4.0.0",
+    "lottie-react": "^2.4.1",
     "next": "14.0.4",
     "qrcode.react": "3.1.0",
     "react": "18.2.0",

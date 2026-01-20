@@ -1,391 +1,1087 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { apiService } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { HomeIcon, FilesIcon, ChatIcon, FriendsIcon, UsersIcon, StatsIcon } from '@/components/icons/Icons';
+import { useRouter } from 'next/navigation';
+import { SnetLogo } from '@/components/icons/SnetIcon';
 import { 
-  FiTrendingUp, FiActivity, FiUser, FiShield, 
-  FiFileText, FiMessageSquare, FiUserPlus, FiUpload,
-  FiClock, FiZap, FiAward, FiStar, FiHeart, FiSettings,
-  FiBarChart2, FiRss, FiGrid
+  FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
+  FiMenu, FiLogOut, FiSettings, FiUser, FiImage, FiVideo,
+  FiSmile, FiMoreHorizontal, FiThumbsUp, FiMessageCircle, FiShare2,
+  FiEdit2, FiTrash2, FiEyeOff, FiBookmark, FiFlag, FiX, FiCheck
 } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { apiService } from '@/lib/api';
+
+interface Post {
+  id: number;
+  content: string;
+  createdAt: string;
+  userId: number;
+  userName: string;
+  userDisplayName: string;
+  userAvatarUrl: string;
+  userVerified: boolean;
+  likeCount: number;
+  commentCount: number;
+  likedByCurrentUser: boolean;
+  fileId?: number;
+  fileName?: string;
+  fileType?: string;
+  fileUrl?: string;
+  videoUrl?: string;
+  videoPlatform?: string;
+}
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<any>(null);
-  const [mounted, setMounted] = useState(false);
-  const [userFileCount, setUserFileCount] = useState(0);
+  const { user, logout, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const isLoadingRef = useRef(false); // Prevent duplicate requests
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [postContent, setPostContent] = useState('');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [friends, setFriends] = useState<any[]>([]);
+  const [showComments, setShowComments] = useState<{ [key: number]: boolean }>({});
+  const [commentContent, setCommentContent] = useState<{ [key: number]: string }>({});
+  const [comments, setComments] = useState<{ [key: number]: any[] }>({});
+  const [showPostMenu, setShowPostMenu] = useState<{ [key: number]: boolean }>({});
+  const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState<string>('');
+  const [replyingTo, setReplyingTo] = useState<{ [key: number]: number | null }>({});
+  const [replyContent, setReplyContent] = useState<{ [key: number]: string }>({});
+  const [likedComments, setLikedComments] = useState<Set<number>>(() => {
+    // Load from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('likedComments');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    }
+    return new Set();
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-    loadStats();
-    loadUserFiles();
+    // Chờ auth loading xong
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    loadPosts();
+    loadFriends();
+  }, [authLoading, user, router]); // Run when auth is ready
+
+  useEffect(() => {
+    // Simple scroll listener for lazy loading (like Facebook)
+    const handleScroll = () => {
+      if (loadingMore || !hasMore) return;
+
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight;
+      const windowHeight = window.innerHeight;
+
+      // Load more when user scrolls to 80% of page
+      if (scrollTop + windowHeight > docHeight * 0.8) {
+        console.log('Triggering load more...', { page, hasMore, loadingMore });
+        loadPosts(false, true, page, posts);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingMore, page, posts]);
+
+  useEffect(() => {
+    // Click outside to close menus
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.post-menu-container')) {
+        setShowPostMenu({});
+      }
+      if (!target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const loadStats = async () => {
+  useEffect(() => {
+    // Auto play/pause videos when scrolling
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting) {
+            // Video vào viewport - phát có âm thanh
+            video.muted = false;
+            video.volume = 1.0;
+            video.play();
+          } else {
+            // Video ra khỏi viewport - dừng
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 } // Phát khi 50% video hiển thị
+    );
+
+    // Observe tất cả video tags
+    const videos = document.querySelectorAll('video');
+    videos.forEach((video) => observer.observe(video));
+
+    return () => observer.disconnect();
+  }, [posts]); // Re-run khi posts thay đổi
+
+  const loadPosts = async (preserveScroll = false, isLoadMore = false, currentPage?: number, existingPosts?: Post[]) => {
     try {
-      if (user?.role === 'ADMIN') {
-        const data = await apiService.getDashboardStats();
-        setStats(data);
+      const scrollPosition = preserveScroll ? window.scrollY : 0;
+      if (!isLoadMore) setLoading(true);
+      else setLoadingMore(true);
+
+      const pageNum = isLoadMore ? (currentPage ?? page) + 1 : 0;
+      const response = await apiService.getPosts(pageNum, 5); // Load 5 posts at a time
+      const newPosts = response.content || [];
+
+      if (isLoadMore) {
+        setPosts([...(existingPosts ?? posts), ...newPosts]);
+        setPage(pageNum);
+      } else {
+        setPosts(newPosts);
+        setPage(0);
+      }
+
+      setHasMore(newPosts.length === 5); // If got 5 posts, there might be more
+
+      if (preserveScroll) {
+        setTimeout(() => window.scrollTo(0, scrollPosition), 0);
       }
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error('Failed to load posts:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const loadUserFiles = async () => {
+  const loadFriends = async () => {
     try {
-      const files = await apiService.getMyFiles();
-      setUserFileCount(files.length);
+      const data = await apiService.getFriendsList();
+      setFriends(data.slice(0, 5)); // Top 5 friends
     } catch (error) {
-      console.error('Failed to load user files:', error);
+      console.error('Failed to load friends:', error);
     }
   };
 
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Chào buổi sáng';
-    if (hour < 18) return 'Chào buổi chiều';
-    return 'Chào buổi tối';
+  const handleCreatePost = async () => {
+    if (!postContent.trim() && !selectedFile) return;
+    
+    try {
+      const formData = new FormData();
+      formData.append('content', postContent);
+      formData.append('privacy', 'PUBLIC');
+      
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+      
+      await apiService.createPost(formData);
+      setPostContent('');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      // Add new post to top without reloading
+      const response = await apiService.getPosts(0, 1);
+      const newPost = response.content?.[0];
+      if (newPost) {
+        setPosts([newPost, ...posts]);
+      }
+    } catch (error) {
+      console.error('Failed to create post:', error);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
+  const handleLikePost = async (postId: number) => {
+    try {
+      // Optimistic update - update UI immediately
+      const updatedPosts = posts.map(p => 
+        p.id === postId 
+          ? {
+              ...p,
+              likedByCurrentUser: !p.likedByCurrentUser,
+              likeCount: p.likedByCurrentUser ? p.likeCount - 1 : p.likeCount + 1
+            }
+          : p
+      );
+      setPosts(updatedPosts);
+
+      // Call API in background
+      await apiService.toggleLike(postId);
+    } catch (error) {
+      console.error('Failed to like post:', error);
+      // Reload on error to sync state
+      loadPosts(true);
+    }
+  };
+
+  const toggleComments = async (postId: number) => {
+    const isShowing = showComments[postId];
+    setShowComments({ ...showComments, [postId]: !isShowing });
+    
+    if (!isShowing && !comments[postId]) {
+      // Load comments if not loaded yet
+      try {
+        const response = await apiService.getPostComments(postId, 0, 20);
+        const commentsList = response.content || [];
+        setComments({ ...comments, [postId]: commentsList });
+        
+        // Initialize liked state from backend
+        const newLikedComments = new Set(likedComments);
+        commentsList.forEach((comment: any) => {
+          if (comment.likedByCurrentUser) {
+            newLikedComments.add(comment.id);
+          }
+        });
+        setLikedComments(newLikedComments);
+      } catch (error) {
+        console.error('Failed to load comments:', error);
+      }
+    }
+  };
+
+  const handleAddComment = async (postId: number) => {
+    const content = commentContent[postId]?.trim();
+    if (!content) return;
+
+    try {
+      await apiService.addComment(postId, content);
+      setCommentContent({ ...commentContent, [postId]: '' });
+      
+      // Reload comments
+      const response = await apiService.getPostComments(postId, 0, 20);
+      const commentsList = response.content || [];
+      setComments({ ...comments, [postId]: commentsList });
+      
+      // Update liked state from backend
+      const newLikedComments = new Set(likedComments);
+      commentsList.forEach((comment: any) => {
+        if (comment.likedByCurrentUser) {
+          newLikedComments.add(comment.id);
+        }
+      });
+      setLikedComments(newLikedComments);
+      
+      // Update comment count in posts state without reloading
+      setPosts(posts.map(p => 
+        p.id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+      ));
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
+  };
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post.id);
+    setEditContent(post.content);
+    setShowPostMenu({});
+  };
+
+  const handleSaveEdit = async (postId: number) => {
+    if (!editContent.trim()) return;
+
+    try {
+      await apiService.updatePost(postId, { content: editContent });
+      // Update post locally
+      setPosts(posts.map(p => 
+        p.id === postId ? { ...p, content: editContent } : p
+      ));
+      setEditingPost(null);
+      setEditContent('');
+    } catch (error) {
+      console.error('Failed to update post:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPost(null);
+    setEditContent('');
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+
+    try {
+      await apiService.deletePost(postId);
+      // Remove post locally
+      setPosts(posts.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+    }
+  };
+
+  const togglePostMenu = (postId: number) => {
+    setShowPostMenu({ [postId]: !showPostMenu[postId] });
+  };
+
+  const isMyPost = (post: Post) => {
+    return post.userId === user?.id;
+  };
+
+  const handleReplyComment = (postId: number, commentId: number) => {
+    setReplyingTo({ ...replyingTo, [postId]: commentId });
+  };
+
+  const handleCancelReply = (postId: number) => {
+    setReplyingTo({ ...replyingTo, [postId]: null });
+    setReplyContent({ ...replyContent, [postId]: '' });
+  };
+
+  const handleSendReply = async (postId: number, parentCommentId: number) => {
+    const content = replyContent[postId]?.trim();
+    if (!content) return;
+
+    try {
+      await apiService.addComment(postId, content, parentCommentId);
+      setReplyContent({ ...replyContent, [postId]: '' });
+      setReplyingTo({ ...replyingTo, [postId]: null });
+      
+      // Reload comments
+      const response = await apiService.getPostComments(postId, 0, 20);
+      const commentsList = response.content || [];
+      setComments({ ...comments, [postId]: commentsList });
+      
+      // Update liked state from backend
+      const newLikedComments = new Set(likedComments);
+      commentsList.forEach((comment: any) => {
+        if (comment.likedByCurrentUser) {
+          newLikedComments.add(comment.id);
+        }
+      });
+      setLikedComments(newLikedComments);
+      
+      // Update comment count in posts state without reloading
+      setPosts(posts.map(p => 
+        p.id === postId ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+      ));
+    } catch (error) {
+      console.error('Failed to reply:', error);
+    }
+  };
+
+  const handleLikeComment = async (postId: number, commentId: number) => {
+    try {
+      // Optimistic update - toggle like state immediately
+      const newLikedComments = new Set(likedComments);
+      const isCurrentlyLiked = newLikedComments.has(commentId);
+      
+      if (isCurrentlyLiked) {
+        newLikedComments.delete(commentId);
+      } else {
+        newLikedComments.add(commentId);
+      }
+      setLikedComments(newLikedComments);
+      localStorage.setItem('likedComments', JSON.stringify(Array.from(newLikedComments)));
+
+      // Update comment like count in UI
+      const updatedComments = comments[postId]?.map((c: any) =>
+        c.id === commentId
+          ? {
+              ...c,
+              likedByCurrentUser: !isCurrentlyLiked,
+              likeCount: isCurrentlyLiked ? c.likeCount - 1 : c.likeCount + 1
+            }
+          : c
+      );
+      if (updatedComments) {
+        setComments({ ...comments, [postId]: updatedComments });
+      }
+
+      // Call API in background
+      await apiService.toggleCommentLike(commentId);
+    } catch (error) {
+      console.error('Failed to like comment:', error);
+      // Reload comments on error to sync state
+      const response = await apiService.getPostComments(postId, 0, 20);
+      const commentsList = response.content || [];
+      setComments({ ...comments, [postId]: commentsList });
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // seconds
+
+    if (diff < 60) return 'Vừa xong';
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    return `${Math.floor(diff / 86400)} ngày trước`;
+  };
+
+  const getUserInitial = (name?: string) => {
+    if (!name) return 'U';
+    return name.charAt(0).toUpperCase();
+  };
+
+  const getUserName = (name?: string) => {
+    return name || 'User';
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 pb-8">
-      {/* Welcome Header with Modern Animated Background */}
-      <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 text-white shadow-2xl overflow-hidden">
-          {/* Animated Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 animate-gradient-xy"></div>
-          
-          {/* Floating Geometric Shapes */}
-          <div className="absolute inset-0">
-            {/* Large Circle */}
-            <div className="absolute top-10 right-10 w-32 h-32 sm:w-48 sm:h-48 bg-white/10 rounded-full blur-2xl animate-float"></div>
-            {/* Medium Square */}
-            <div className="absolute bottom-20 left-10 w-24 h-24 sm:w-36 sm:h-36 bg-yellow-300/20 rounded-3xl blur-xl animate-float-delayed rotate-45"></div>
-            {/* Small Circle */}
-            <div className="absolute top-1/2 left-1/4 w-16 h-16 sm:w-24 sm:h-24 bg-blue-400/20 rounded-full blur-xl animate-float-slow"></div>
-            {/* Triangle-ish */}
-            <div className="absolute bottom-10 right-1/4 w-20 h-20 sm:w-32 sm:h-32 bg-pink-400/20 rounded-2xl blur-2xl animate-float-reverse"></div>
-          </div>
-
-          {/* Animated Grid Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-              backgroundSize: '50px 50px',
-              animation: 'grid-move 20s linear infinite'
-            }}></div>
-          </div>
-
-          {/* Shine Effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shine"></div>
-          
-          {/* Overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-          
-          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-3">
-                <span className="text-xs sm:text-sm lg:text-base font-medium bg-white/30 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full border border-white/20 shadow-lg whitespace-nowrap">
-                  {getGreeting()}
-                </span>
-                {user?.verified && (
-                  <span className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm bg-yellow-400/30 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-yellow-200/30 shadow-lg animate-pulse whitespace-nowrap">
-                    <FiAward className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span>Verified</span>
-                  </span>
-                )}
-                {user?.role === 'ADMIN' && (
-                  <span className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm bg-red-400/30 backdrop-blur-md px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-red-200/30 shadow-lg whitespace-nowrap">
-                    <FiShield className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    Admin
-                  </span>
-                )}
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-3 bg-gradient-to-r from-white to-purple-100 bg-clip-text text-transparent">
-                {user?.displayName || 'User'}! 👋
-              </h1>
-              <p className="text-purple-100 text-sm sm:text-base lg:text-lg mb-2">
-                Chào mừng trở lại với PixShare. Bạn có <span className="font-bold text-white">{userFileCount}</span> file đã upload.
-              </p>
-              <p className="text-xs sm:text-sm text-purple-200">
-                📅 {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <a
-                href="/dashboard/files"
-                className="px-5 sm:px-7 py-2.5 sm:py-3.5 bg-white text-primary-600 rounded-xl font-bold hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all text-sm sm:text-base flex items-center gap-2 justify-center group"
-              >
-                <FiUpload className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                Upload File
-              </a>
-              <a
-                href="/dashboard/feed"
-                className="px-5 sm:px-7 py-2.5 sm:py-3.5 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-xl font-bold hover:bg-white/30 hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 transition-all text-sm sm:text-base flex items-center gap-2 justify-center group"
-              >
-                <FiRss className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                Bản tin
-              </a>
+    <div className="min-h-screen bg-black text-white pb-16 md:pb-0">
+      {/* Header */}
+      <header className="sticky top-0 z-[100] bg-black/95 backdrop-blur-md border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-3 md:px-4 h-14 md:h-16 flex items-center justify-between">
+          {/* Left */}
+          <div className="flex items-center gap-4">
+            <SnetLogo size="md" className="text-primary-500" />
+            <div className="hidden sm:flex items-center bg-white/5 rounded-full px-4 py-2 gap-2 border border-gray-700">
+              <FiSearch className="w-5 h-5 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm..." 
+                className="bg-transparent border-none outline-none text-sm w-48"
+              />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Stats Grid with Gradient Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Status Card */}
-        <div className="group bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-5 sm:p-6 text-white hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-3 sm:mb-4">
-            <div>
-              <div className="text-xs sm:text-sm text-green-100 mb-1">Trạng thái</div>
-              <div className="text-2xl sm:text-3xl font-bold">Online</div>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm p-2 sm:p-3 rounded-xl group-hover:scale-110 transition-transform">
-              <FiActivity className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-xs sm:text-sm">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-green-100">Đang hoạt động</span>
-          </div>
-        </div>
-
-        {/* Role Card */}
-        <div className="group bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-5 sm:p-6 text-white hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-3 sm:mb-4">
-            <div>
-              <div className="text-xs sm:text-sm text-purple-100 mb-1">Vai trò</div>
-              <div className="text-xl sm:text-2xl font-bold">
-                {user?.role === 'ADMIN' ? 'Admin' : 'Member'}
-              </div>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm p-2 sm:p-3 rounded-xl group-hover:scale-110 transition-transform">
-              <FiShield className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-          </div>
-          <div className="text-xs sm:text-sm text-purple-100">
-            {user?.role === 'ADMIN' ? 'Quản trị viên hệ thống' : 'Thành viên'}
-          </div>
-        </div>
-
-        {/* Users Card (Admin only) */}
-        {stats && (
-          <div className="group bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-5 sm:p-6 text-white hover:-translate-y-1">
-            <div className="flex items-start justify-between mb-3 sm:mb-4">
-              <div>
-                <div className="text-xs sm:text-sm text-blue-100 mb-1">Người dùng</div>
-                <div className="text-2xl sm:text-3xl font-bold">{stats.totalUsers}</div>
-              </div>
-              <div className="bg-white/20 backdrop-blur-sm p-2 sm:p-3 rounded-xl group-hover:scale-110 transition-transform">
-                <FiUser className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-xs sm:text-sm text-blue-100">
-              <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>+12% tuần này</span>
-            </div>
-          </div>
-        )}
-
-        {/* Files Card (Admin only) */}
-        {stats && (
-          <div className="group bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-5 sm:p-6 text-white hover:-translate-y-1">
-            <div className="flex items-start justify-between mb-3 sm:mb-4">
-              <div>
-                <div className="text-xs sm:text-sm text-purple-100 mb-1">Tổng file</div>
-                <div className="text-2xl sm:text-3xl font-bold">{stats.totalFiles}</div>
-              </div>
-              <div className="bg-white/20 backdrop-blur-sm p-2 sm:p-3 rounded-xl group-hover:scale-110 transition-transform">
-                <FiFileText className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-            </div>
-            <div className="flex items-center gap-1 text-xs sm:text-sm text-purple-100">
-              <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>+24% tuần này</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Quick Actions - Modern Cards */}
-      <div>
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FiZap className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
-            Bắt đầu nhanh
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {/* Feed Card - NEW */}
-          <a
-            href="/dashboard/feed"
-            className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 border-2 border-transparent hover:border-orange-500 overflow-hidden hover:-translate-y-2"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-red-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                <FiRss size={24} className="sm:w-8 sm:h-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Bản tin</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Chia sẻ và khám phá nội dung mới
-              </p>
-              <div className="flex items-center gap-2 text-orange-600 font-semibold text-sm sm:text-base">
-                <span>Xem ngay</span>
-                <FiHeart className="w-4 h-4 group-hover:scale-125 transition-transform" />
-              </div>
-            </div>
-          </a>
-
-          {/* Files Card */}
-          <a
-            href="/dashboard/files"
-            className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 border-2 border-transparent hover:border-primary-500 overflow-hidden hover:-translate-y-2"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-100 to-purple-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                <FilesIcon size={24} className="sm:w-8 sm:h-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Quản lý file</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Upload, xem và chia sẻ file của bạn
-              </p>
-              <div className="flex items-center gap-2 text-primary-600 font-semibold text-sm sm:text-base">
-                <span>Mở ngay</span>
-                <FiUpload className="w-4 h-4 group-hover:translate-y-[-2px] transition-transform" />
-              </div>
-            </div>
-          </a>
-
-          {/* Chat Card */}
-          <a
-            href="/dashboard/chat"
-            className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 border-2 border-transparent hover:border-blue-500 overflow-hidden hover:-translate-y-2"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                <ChatIcon size={24} className="sm:w-8 sm:h-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Trò chuyện</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Chat realtime với bạn bè và nhóm
-              </p>
-              <div className="flex items-center gap-2 text-blue-600 font-semibold text-sm sm:text-base">
-                <span>Bắt đầu chat</span>
-                <FiMessageSquare className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </a>
-
-          {/* Friends Card */}
-          <a
-            href="/dashboard/friends"
-            className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 border-2 border-transparent hover:border-pink-500 overflow-hidden hover:-translate-y-2"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                <FriendsIcon size={24} className="sm:w-8 sm:h-8 text-white" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Kết bạn</h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Tìm kiếm và kết nối với bạn bè mới
-              </p>
-              <div className="flex items-center gap-2 text-pink-600 font-semibold text-sm sm:text-base">
-                <span>Khám phá</span>
-                <FiUserPlus className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </a>
-
-          {/* Admin Panel - Only for Admin */}
-          {user?.role === 'ADMIN' && (
-            <a
-              href="/admin"
-              className="group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 sm:p-8 border-2 border-transparent hover:border-red-500 overflow-hidden hover:-translate-y-2"
+          {/* Center - Navigation */}
+          <nav className="hidden md:flex items-center gap-2">
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors border-b-2 border-primary-500"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-100 to-rose-100 rounded-full -mr-16 -mt-16 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-              <div className="relative">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg">
-                  <FiSettings size={24} className="sm:w-8 sm:h-8 text-white" />
+              <FiHome className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => router.push('/dashboard/friends')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <FiUsers className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => router.push('/dashboard/chat')}
+              className="px-6 py-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <FiMessageSquare className="w-6 h-6" />
+            </button>
+          </nav>
+
+          {/* Right */}
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+              <FiBell className="w-6 h-6" />
+            </button>
+            <div className="relative user-menu-container">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold"
+              >
+                {getUserInitial(getUserName(user?.displayName))}
+              </button>
+              
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-4 border-b border-gray-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-lg">
+                        {getUserInitial(getUserName(user?.displayName))}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{getUserName(user?.displayName)}</p>
+                        <p className="text-sm text-gray-400">{user?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => router.push('/dashboard/profile')}
+                    className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left"
+                  >
+                    <FiUser className="w-5 h-5" />
+                    <span>Trang cá nhân</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/dashboard/settings')}
+                    className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left"
+                  >
+                    <FiSettings className="w-5 h-5" />
+                    <span>Cài đặt</span>
+                  </button>
+                  <div className="border-t border-gray-700"></div>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 hover:bg-red-500/10 transition-colors flex items-center gap-3 text-left text-red-500"
+                  >
+                    <FiLogOut className="w-5 h-5" />
+                    <span>Đăng xuất</span>
+                  </button>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Quản trị</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4">
-                  Quản lý hệ thống và người dùng
-                </p>
-                <div className="flex items-center gap-2 text-red-600 font-semibold text-sm sm:text-base">
-                  <span>Admin Panel</span>
-                  <FiBarChart2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar */}
+          <aside className="hidden lg:block lg:col-span-3">
+            <div className="sticky top-20 space-y-2">
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold">
+                  {getUserInitial(getUserName(user?.displayName))}
+                </div>
+                <span className="font-semibold">{getUserName(user?.displayName)}</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
+                <FiUsers className="w-6 h-6 text-blue-500" />
+                <span>Bạn bè</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
+                <FiMessageSquare className="w-6 h-6 text-green-500" />
+                <span>Tin nhắn</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
+                <FiUsers className="w-6 h-6 text-purple-500" />
+                <span>Nhóm</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* Center Feed */}
+          <main className="lg:col-span-6 space-y-4 pb-20 md:pb-4">
+            {/* Create Post */}
+            <div className="bg-white/5 border border-gray-700 rounded-xl p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm md:text-base">
+                  {getUserInitial(getUserName(user?.displayName))}
+                </div>
+                <input
+                  type="text"
+                  placeholder={`${getUserName(user?.displayName)} ơi, bạn đang nghĩ gì?`}
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !selectedFile && handleCreatePost()}
+                  className="flex-1 bg-white/5 border border-gray-700 rounded-full px-3 md:px-4 py-2 outline-none focus:border-primary-500 transition-colors text-sm md:text-base"
+                />
+              </div>
+
+              {/* Preview */}
+              {previewUrl && (
+                <div className="mb-3 md:mb-4 relative">
+                  <button
+                    onClick={handleRemoveFile}
+                    className="absolute top-2 right-2 bg-black/70 hover:bg-black rounded-full p-1.5 md:p-2 z-10"
+                  >
+                    <FiX className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                  {selectedFile?.type.startsWith('image/') ? (
+                    <img src={previewUrl} alt="Preview" className="w-full rounded-lg max-h-64 md:max-h-96 object-cover" />
+                  ) : selectedFile?.type.startsWith('video/') ? (
+                    <video src={previewUrl} controls className="w-full rounded-lg max-h-64 md:max-h-96" />
+                  ) : null}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-gray-700">
+                <div className="flex gap-1 md:gap-2">
+                  <label className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
+                    <FiImage className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                    <span className="text-xs md:text-sm hidden sm:inline">Ảnh</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
+                    <FiVideo className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                    <span className="text-xs md:text-sm hidden sm:inline">Video</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <button 
+                  onClick={handleCreatePost}
+                  disabled={!postContent.trim() && !selectedFile}
+                  className="px-4 md:px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-semibold text-sm md:text-base"
+                >
+                  Đăng
+                </button>
+              </div>
+            </div>
+
+            {/* Loading */}
+            {loading && (
+              <div className="text-center py-8">
+                <div className="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            {/* Posts */}
+            {!loading && posts.map((post, index) => (
+              <article 
+                key={post.id} 
+                className="bg-white/5 border border-gray-700 rounded-xl relative"
+                style={{ zIndex: showPostMenu[post.id] ? 100 : posts.length - index }}
+              >
+                {/* Post Header */}
+                <div className="p-3 md:p-4 flex items-center justify-between overflow-visible">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base">
+                      {getUserInitial(post.userDisplayName)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm md:text-base">{getUserName(post.userDisplayName)}</p>
+                      <p className="text-xs text-gray-400">{formatTime(post.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="relative post-menu-container">
+                    <button 
+                      onClick={() => togglePostMenu(post.id)}
+                      className="p-1.5 md:p-2 hover:bg-white/5 rounded-full transition-colors"
+                    >
+                      <FiMoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                    
+                    {showPostMenu[post.id] && (
+                      <div className="absolute right-0 mt-2 w-48 md:w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                        {isMyPost(post) ? (
+                          <>
+                            <button
+                              onClick={() => { handleEditPost(post); setShowPostMenu({}); }}
+                              className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left"
+                            >
+                              <FiEdit2 className="w-5 h-5" />
+                              <span>Chỉnh sửa bài viết</span>
+                            </button>
+                            <button
+                              onClick={() => { handleDeletePost(post.id); setShowPostMenu({}); }}
+                              className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left text-red-500"
+                            >
+                              <FiTrash2 className="w-5 h-5" />
+                              <span>Xóa bài viết</span>
+                            </button>
+                            <div className="border-t border-gray-700"></div>
+                            <button className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left">
+                              <FiEyeOff className="w-5 h-5" />
+                              <span>Ẩn khỏi dòng thời gian</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left">
+                              <FiBookmark className="w-5 h-5" />
+                              <span>Lưu bài viết</span>
+                            </button>
+                            <button className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left">
+                              <FiEyeOff className="w-5 h-5" />
+                              <span>Ẩn bài viết</span>
+                            </button>
+                            <div className="border-t border-gray-700"></div>
+                            <button className="w-full px-4 py-3 hover:bg-white/5 transition-colors flex items-center gap-3 text-left text-red-500">
+                              <FiFlag className="w-5 h-5" />
+                              <span>Báo cáo bài viết</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Post Content */}
+                {editingPost === post.id ? (
+                  <div className="px-4 pb-3 space-y-3">
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full bg-white/5 border border-gray-700 rounded-lg px-4 py-3 text-base outline-none focus:border-primary-500 transition-colors resize-none"
+                      rows={4}
+                      autoFocus
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={handleCancelEdit}
+                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <FiX className="w-4 h-4" />
+                        Hủy
+                      </button>
+                      <button
+                        onClick={() => handleSaveEdit(post.id)}
+                        disabled={!editContent.trim()}
+                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <FiCheck className="w-4 h-4" />
+                        Lưu
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="px-4 pb-3">
+                      <p className="text-base whitespace-pre-wrap">{post.content}</p>
+                    </div>
+
+                    {/* Media */}
+                    {post.fileUrl && (
+                      <div className="mb-3 max-h-[70vh] overflow-hidden bg-black">
+                        {post.fileType?.startsWith('image/') ? (
+                          <img 
+                            src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                            alt="Post image" 
+                            className="w-full max-h-[70vh] object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
+                          />
+                        ) : post.fileType?.startsWith('video/') ? (
+                          <video 
+                            key={post.id}
+                            autoPlay
+                            loop
+                            playsInline
+                            controls
+                            controlsList="nodownload"
+                            preload="metadata"
+                            className="w-full max-h-[70vh] object-contain"
+                            style={{ outline: 'none' }}
+                          >
+                            <source 
+                              src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`} 
+                              type={post.fileType || 'video/mp4'} 
+                            />
+                            Trình duyệt không hỗ trợ video.
+                          </video>
+                        ) : null}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Post Stats */}
+                <div className="px-4 py-2 flex items-center justify-between text-sm text-gray-400 border-t border-gray-700">
+                  <span>{post.likeCount || 0} lượt thích</span>
+                  <div className="flex gap-3">
+                    <span>{post.commentCount || 0} bình luận</span>
+                  </div>
+                </div>
+
+                {/* Post Actions */}
+                <div className="px-2 md:px-4 py-2 flex items-center justify-around border-t border-gray-700">
+                  <button 
+                    onClick={() => handleLikePost(post.id)}
+                    className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 justify-center ${post.likedByCurrentUser ? 'text-primary-500' : ''}`}
+                  >
+                    <FiThumbsUp className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm hidden sm:inline">{post.likedByCurrentUser ? 'Đã thích' : 'Thích'}</span>
+                  </button>
+                  <button 
+                    onClick={() => toggleComments(post.id)}
+                    className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 justify-center"
+                  >
+                    <FiMessageCircle className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm hidden sm:inline">Bình luận</span>
+                  </button>
+                  <button className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 justify-center">
+                    <FiShare2 className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-xs md:text-sm hidden sm:inline">Chia sẻ</span>
+                  </button>
+                </div>
+
+                {/* Comments Section */}
+                {showComments[post.id] && (
+                  <div className="border-t border-gray-700">
+                    {/* Comment Input */}
+                    <div className="p-4 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {getUserInitial(user?.displayName)}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Viết bình luận..."
+                        value={commentContent[post.id] || ''}
+                        onChange={(e) => setCommentContent({ ...commentContent, [post.id]: e.target.value })}
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
+                        className="flex-1 bg-white/5 border border-gray-700 rounded-full px-4 py-2 text-sm outline-none focus:border-primary-500 transition-colors"
+                      />
+                      <button
+                        onClick={() => handleAddComment(post.id)}
+                        disabled={!commentContent[post.id]?.trim()}
+                        className="text-primary-500 hover:text-primary-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <FiMessageCircle className="w-6 h-6" />
+                      </button>
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="px-4 pb-4 space-y-3 max-h-96 overflow-y-auto">
+                      {comments[post.id]?.map((comment: any) => {
+                        try {
+                          return (
+                        <div key={comment.id}>
+                          {/* Main Comment */}
+                          <div className="flex gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
+                              {getUserInitial(comment.userDisplayName)}
+                            </div>
+                            <div className="flex-1">
+                              <div className="bg-white/5 rounded-2xl px-4 py-2">
+                                <p className="font-semibold text-sm">{getUserName(comment.userDisplayName)}</p>
+                                <p className="text-sm">{comment.content}</p>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 px-2 text-xs text-gray-400">
+                                <span>{formatTime(comment.createdAt)}</span>
+                                {comment.likeCount > 0 && (
+                                  <span className="text-primary-500">{comment.likeCount} thích</span>
+                                )}
+                                <button 
+                                  onClick={() => handleLikeComment(post.id, comment.id)}
+                                  className={`hover:text-primary-500 transition-colors font-semibold ${likedComments.has(comment.id) ? 'text-primary-500' : ''}`}
+                                >
+                                  {likedComments.has(comment.id) ? '❤️ Đã thích' : 'Thích'}
+                                </button>
+                                <button 
+                                  onClick={() => handleReplyComment(post.id, comment.id)}
+                                  className="hover:text-primary-500 transition-colors font-semibold"
+                                >
+                                  Trả lời
+                                </button>
+                                {comment.userId === user?.id && (
+                                  <button 
+                                    onClick={async () => {
+                                      if (confirm('Bạn có chắc muốn xóa bình luận này?')) {
+                                        try {
+                                          const replyCount = comment.replies?.length || 0;
+                                          await apiService.deleteComment(comment.id);
+                                          const response = await apiService.getPostComments(post.id, 0, 20);
+                                          setComments({ ...comments, [post.id]: response.content || [] });
+                                          // Update comment count locally (parent + replies)
+                                          setPosts(posts.map(p => 
+                                            p.id === post.id ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - replyCount - 1) } : p
+                                          ));
+                                        } catch (error: any) {
+                                          console.error('Failed to delete comment:', error);
+                                          alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+                                        }
+                                      }
+                                    }}
+                                    className="hover:text-red-500 transition-colors font-semibold"
+                                  >
+                                    Xóa
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Reply Input */}
+                          {replyingTo[post.id] === comment.id && (
+                            <div className="ml-11 mt-2 flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                              <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                {getUserInitial(user?.displayName)}
+                              </div>
+                              <input
+                                type="text"
+                                placeholder={`Trả lời ${getUserName(comment.userDisplayName)}...`}
+                                value={replyContent[post.id] || ''}
+                                onChange={(e) => setReplyContent({ ...replyContent, [post.id]: e.target.value })}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSendReply(post.id, comment.id)}
+                                className="flex-1 bg-white/5 border border-gray-700 rounded-full px-3 py-1.5 text-xs outline-none focus:border-primary-500 transition-colors"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleSendReply(post.id, comment.id)}
+                                disabled={!replyContent[post.id]?.trim()}
+                                className="text-primary-500 hover:text-primary-400 disabled:opacity-30 text-xs font-semibold"
+                              >
+                                Gửi
+                              </button>
+                              <button
+                                onClick={() => handleCancelReply(post.id)}
+                                className="text-gray-400 hover:text-white text-xs font-semibold"
+                              >
+                                Hủy
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Nested Replies */}
+                          {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
+                            <div className="ml-11 mt-2 space-y-2 border-l-2 border-gray-700 pl-3">
+                              {comment.replies.map((reply: any) => {
+                                if (!reply || !reply.id) return null;
+                                return (
+                                <div key={reply.id} className="flex gap-2">
+                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    {getUserInitial(reply.userDisplayName)}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="bg-white/5 rounded-xl px-3 py-1.5">
+                                      <p className="font-semibold text-xs">{getUserName(reply.userDisplayName)}</p>
+                                      <p className="text-xs">{reply.content}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-0.5 px-2 text-xs text-gray-400">
+                                      <span className="text-[10px]">{formatTime(reply.createdAt)}</span>
+                                      <button className="hover:text-primary-500 transition-colors font-semibold text-[10px]">
+                                        Thích
+                                      </button>
+                                      <button className="hover:text-primary-500 transition-colors font-semibold text-[10px]">
+                                        Trả lời
+                                      </button>
+                                      {reply.userId === user?.id && (
+                                        <button 
+                                          onClick={async () => {
+                                            if (confirm('Bạn có chắc muốn xóa bình luận này?')) {
+                                              try {
+                                                await apiService.deleteComment(reply.id);
+                                                const response = await apiService.getPostComments(post.id, 0, 20);
+                                                setComments({ ...comments, [post.id]: response.content || [] });
+                                                // Update comment count locally (only -1 for reply)
+                                                setPosts(posts.map(p => 
+                                                  p.id === post.id ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - 1) } : p
+                                                ));
+                                              } catch (error: any) {
+                                                alert('❌ Lỗi: ' + (error.response?.data?.message || error.message));
+                                              }
+                                            }
+                                          }}
+                                          className="hover:text-red-500 transition-colors font-semibold text-[10px]"
+                                        >
+                                          Xóa
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                          );
+                        } catch (error) {
+                          console.error('Error rendering comment:', comment.id, error);
+                          return null;
+                        }
+                      })}
+                      {(!comments[post.id] || comments[post.id].length === 0) && (
+                        <p className="text-center text-gray-400 text-sm py-4">Chưa có bình luận nào</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </article>
+            ))}
+
+            {/* Loading indicator */}
+            {loadingMore && (
+              <div className="py-8 text-center">
+                <div className="inline-block w-6 h-6 border-3 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </main>
+
+          {/* Right Sidebar */}
+          <aside className="hidden xl:block lg:col-span-3">
+            <div className="sticky top-20">
+              <h3 className="font-semibold mb-3 px-2">Được tài trợ</h3>
+              <div className="space-y-3 mb-6">
+                <div className="p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
+                  <div className="w-full h-32 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg mb-2"></div>
+                  <p className="text-sm font-semibold">Quảng cáo mẫu</p>
+                  <p className="text-xs text-gray-400">example.com</p>
                 </div>
               </div>
-            </a>
-          )}
+
+              <h3 className="font-semibold mb-3 px-2">Người liên hệ</h3>
+              <div className="space-y-2">
+                {friends.length === 0 ? (
+                  <p className="text-sm text-gray-400 px-2">Chưa có bạn bè</p>
+                ) : (
+                  friends.map((friend) => (
+                    <button key={friend.id} className="w-full flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-colors text-left">
+                      <div className="relative">
+                        <div className="w-9 h-9 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm">
+                          {getUserInitial(friend.displayName || "User")}
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>
+                      </div>
+                      <span className="text-sm">{friend.displayName || "User"}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
-      {/* Recent Activity Section */}
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FiClock className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
-            Hoạt động gần đây
-          </h2>
-          <button className="text-sm sm:text-base text-primary-600 hover:text-primary-700 font-medium">
-            Xem tất cả
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md border-t border-gray-800 px-4 py-2 z-[100]">
+        <div className="flex items-center justify-around">
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="p-3 text-primary-500"
+          >
+            <FiHome className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={() => router.push('/dashboard/friends')}
+            className="p-3 hover:text-primary-500 transition-colors"
+          >
+            <FiUsers className="w-6 h-6" />
+          </button>
+          <button 
+            onClick={() => router.push('/dashboard/chat')}
+            className="p-3 hover:text-primary-500 transition-colors"
+          >
+            <FiMessageSquare className="w-6 h-6" />
+          </button>
+          <button className="p-3 hover:text-primary-500 transition-colors">
+            <FiBell className="w-6 h-6" />
+          </button>
+          <button className="p-3 hover:text-primary-500 transition-colors">
+            <FiMenu className="w-6 h-6" />
           </button>
         </div>
-
-        <div className="space-y-4">
-          {/* Activity Items */}
-          <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FiUpload className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
-                Bạn đã upload file mới
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600">2 phút trước</p>
-            </div>
-            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">Vừa xong</span>
-          </div>
-
-          <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FiMessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
-                Tin nhắn mới từ bạn bè
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600">15 phút trước</p>
-            </div>
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs sm:text-sm rounded-full flex-shrink-0">3 mới</span>
-          </div>
-
-          <div className="flex items-center gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-              <FiUserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
-                Lời mời kết bạn mới
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600">1 giờ trước</p>
-            </div>
-            <button className="px-3 py-1 bg-primary-600 text-white text-xs sm:text-sm rounded-lg hover:bg-primary-700 transition-colors flex-shrink-0">
-              Xem
-            </button>
-          </div>
-        </div>
-      </div>
+      </nav>
     </div>
   );
 }

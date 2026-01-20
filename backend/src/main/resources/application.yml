@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pixshare-backend
+    name: snet-backend
   
   datasource:
     url: jdbc:mysql://localhost:3306/PixShare_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
@@ -45,7 +45,7 @@ spring:
 server:
   port: 8086
   address: 0.0.0.0
-  url: http://113.170.159.180:8086
+  url: http://123.28.149.142:8086
   error:
     include-message: always
     include-binding-errors: always
@@ -81,7 +81,7 @@ file:
 
 # CORS Configuration
 cors:
-  allowed-origins: http://localhost:3006,http://113.170.159.180:3006,http://113.170.159.180:8086
+  allowed-origins: http://localhost:3006,http://123.28.149.142:3006,http://123.28.149.142:8086
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: "*"
   allow-credentials: true

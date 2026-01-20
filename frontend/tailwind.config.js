@@ -9,16 +9,23 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#e8f5fe',
+          100: '#d1ebfd',
+          200: '#a3d7fb',
+          300: '#75c3f9',
+          400: '#47aff7',
+          500: '#1d9bf0',
+          600: '#1a8cd8',
+          700: '#177dc0',
+          800: '#146ea8',
+          900: '#115f90',
+        },
+      },
+      keyframes: {
+        loading: {
+          '0%': { transform: 'translateX(-100%)' },
+          '50%': { transform: 'translateX(250%)' },
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
     },

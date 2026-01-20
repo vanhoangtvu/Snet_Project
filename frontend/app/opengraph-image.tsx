@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 // Image metadata
-export const alt = 'PixShare - Share Photos, Videos and Chat';
+export const alt = 'Snet - Share Photos, Videos and Chat';
 export const size = {
   width: 1200,
   height: 630,
@@ -110,7 +110,7 @@ export default async function Image() {
             textShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
         >
-          PixShare
+          Snet
         </div>
 
         {/* Description */}

@@ -1,11 +1,11 @@
 {
-  "name": "PixShare - Share Photos, Videos and Chat",
-  "short_name": "PixShare",
-  "description": "Chia sẻ ảnh, video và trò chuyện với bạn bè",
+  "name": "Snet - Social Network & File Sharing",
+  "short_name": "Snet",
+  "description": "Kết nối và chia sẻ với bạn bè",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#8b5cf6",
+  "theme_color": "#1d9bf0",
   "orientation": "portrait-primary",
   "icons": [
     {

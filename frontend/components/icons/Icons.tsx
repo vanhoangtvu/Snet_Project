@@ -306,7 +306,7 @@ export const BackIcon: React.FC<IconProps> = ({ className = '', size = 24 }) => 
   </svg>
 );
 
-// Logo Icon - Modern PixShare logo with 3D effect
+// Logo Icon - Modern Snet logo with 3D effect
 export const LogoIcon: React.FC<IconProps> = ({ className = '', size = 32 }) => {
   // Generate unique IDs for gradients to avoid conflicts when multiple logos are on the same page
   const uniqueId = React.useId();
@@ -426,7 +426,7 @@ export const LogoWithText: React.FC<LogoWithTextProps> = ({ className = '', size
       <LogoIcon size={sizeConfig.logo} />
       <div className="flex flex-col">
         <span className={`${sizeConfig.text} font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-none`}>
-          PixShare
+          Snet
         </span>
         <span className="text-[10px] sm:text-xs text-gray-500 font-medium leading-none mt-0.5">
           Share Your Moments

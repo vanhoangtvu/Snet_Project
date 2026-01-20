@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://113.170.159.180:8086/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 class ApiService {
   private api: AxiosInstance;
@@ -9,7 +9,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: `${API_BASE_URL}/api`,
       timeout: 30000, // 30 seconds timeout
       headers: {
         'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ class ApiService {
         // Bỏ qua kiểm tra token cho các endpoint không cần auth
         const publicEndpoints = ['/auth/login', '/auth/register'];
         const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
-        
+
         if (!isPublicEndpoint) {
           const token = localStorage.getItem('token');
           if (token) {
@@ -45,32 +45,29 @@ class ApiService {
       },
       (error) => {
         console.error('Error response:', error.config?.url, '| Status:', error.response?.status);
-        
-        // Xử lý lỗi mạng (backend chưa sẵn sàng)
+
+        // Xử lý lỗi mạng (backend chưa sẵn sàng) - KHÔNG xóa token
         if (!error.response) {
           console.error('Network error - Backend may not be ready');
-          // Xóa token cũ nếu backend không phản hồi
-          if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
-          }
           return Promise.reject(error);
         }
-        
-        // Xử lý lỗi 401 Unauthorized
+
+        // Xử lý lỗi 401 - LET AuthContext HANDLE IT
         if (error.response?.status === 401) {
-          console.warn('Unauthorized - Clearing auth data and redirecting to login');
-          // Xóa tất cả dữ liệu khi bị unauthorized
+          console.warn('⚠️ 401 Unauthorized - Let AuthContext handle it');
+          // Không xóa token ở đây, để AuthContext xử lý
+          // Chỉ redirect nếu user đang ở trang protected
           if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
-            // Ngăn redirect loop bằng cách kiểm tra current path
-            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+            const isAuthPage = window.location.pathname.includes('/login') || 
+                              window.location.pathname.includes('/register');
+            if (!isAuthPage && !window.location.pathname.includes('/dashboard')) {
+              // Chỉ redirect nếu không phải auth page
+              console.log('Redirecting to login...');
               window.location.href = '/login';
             }
           }
         }
-        
+
         return Promise.reject(error);
       }
     );
@@ -192,7 +189,7 @@ class ApiService {
     if (description) formData.append('description', description);
 
     const response = await this.api.post('/files', formData, {
-      headers: { 
+      headers: {
         'Content-Type': 'multipart/form-data',
         // No compression header needed - let browser handle it
       },
@@ -299,7 +296,7 @@ class ApiService {
   async getAllFiles(category?: string) {
     const params = new URLSearchParams();
     if (category) params.append('category', category);
-    
+
     const url = `/admin/files${params.toString() ? '?' + params.toString() : ''}`;
     const response = await this.api.get(url);
     return response.data;
@@ -410,7 +407,10 @@ class ApiService {
   }
 
   async createPost(data: any) {
-    const response = await this.api.post('/posts', data);
+    const isFormData = data instanceof FormData;
+    const response = await this.api.post('/posts', data, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined
+    });
     return response.data;
   }
 
@@ -429,8 +429,11 @@ class ApiService {
     return response.data;
   }
 
-  async addComment(postId: number, content: string) {
-    const response = await this.api.post(`/posts/${postId}/comments`, { content });
+  async addComment(postId: number, content: string, parentCommentId?: number) {
+    const response = await this.api.post(`/posts/${postId}/comments`, { 
+      content,
+      parentCommentId 
+    });
     return response.data;
   }
 
@@ -441,6 +444,11 @@ class ApiService {
 
   async deleteComment(commentId: number) {
     const response = await this.api.delete(`/posts/comments/${commentId}`);
+    return response.data;
+  }
+
+  async toggleCommentLike(commentId: number) {
+    const response = await this.api.post(`/posts/comments/${commentId}/like`);
     return response.data;
   }
 

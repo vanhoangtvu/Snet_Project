@@ -1,40 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogoIcon, LogoWithText } from '@/components/icons/Icons';
-import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiShield, FiCheck } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { apiService } from '@/lib/api';
+import { FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { SnetLogo } from '@/components/icons/SnetIcon';
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    displayName: '',
+    confirmPassword: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register } = useAuth();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu không khớp');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
 
     setLoading(true);
 
     try {
-      await register(email, password, displayName);
+      await apiService.register({
+        email: formData.email,
+        password: formData.password,
+        displayName: formData.displayName
+      });
+      router.push('/login');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng ký thất bại');
     } finally {
@@ -42,285 +44,142 @@ export default function RegisterPage() {
     }
   };
 
-  // Password strength indicator
-  const getPasswordStrength = () => {
-    if (password.length === 0) return { level: 0, text: '', color: '' };
-    if (password.length < 6) return { level: 1, text: 'Yếu', color: 'bg-red-500' };
-    if (password.length < 10) return { level: 2, text: 'Trung bình', color: 'bg-yellow-500' };
-    return { level: 3, text: 'Mạnh', color: 'bg-green-500' };
-  };
-
-  const passwordStrength = getPasswordStrength();
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-4 py-12">
-      {/* Background Decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="relative max-w-md w-full">
-        {/* Register Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-10 border border-white/20">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl blur-lg opacity-50"></div>
-                <div className="relative bg-white p-3 rounded-2xl">
-                  <LogoIcon size={48} className="sm:w-16 sm:h-16" />
-                </div>
-              </div>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-              Tạo tài khoản mới
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
-              Tham gia PixShare ngay hôm nay
-            </p>
+    <div className="min-h-screen bg-black text-white">
+      <div className="grid lg:grid-cols-2 min-h-screen">
+        {/* Left - Hero */}
+        <div className="hidden lg:flex items-center justify-center bg-black relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 to-transparent"></div>
+          <div className="text-center space-y-6 z-10 px-8">
+            <SnetLogo size="lg" className="text-primary-500 mx-auto" />
+            <h2 className="text-5xl font-bold">Tham gia cùng chúng tôi</h2>
+            <p className="text-xl text-gray-400">Tạo tài khoản để bắt đầu</p>
           </div>
+        </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-start gap-2">
-              <FiShield className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
+        {/* Right - Form */}
+        <div className="flex items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-md space-y-6 sm:space-y-8">
+            <div className="flex items-center justify-center lg:justify-between lg:hidden mb-6">
+              <SnetLogo size="lg" className="text-primary-500" />
+              <button
+                onClick={() => router.push('/')}
+                className="hidden lg:block text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+              >
+                <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
             </div>
-          )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Display Name Input */}
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-semibold text-gray-700 mb-2">
-                Tên hiển thị
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiUser className="h-5 w-5 text-gray-400" />
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-bold">Tạo tài khoản</h1>
+              <p className="text-gray-400">Điền thông tin để bắt đầu</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg text-sm">
+                  {error}
                 </div>
+              )}
+
+              <div>
                 <input
-                  id="displayName"
                   type="text"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                  placeholder="Tên hiển thị"
                   required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3 sm:py-3.5 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base transition-all hover:border-gray-300"
-                  placeholder="Nguyễn Văn A"
+                  className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3.5 text-base text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
                 />
               </div>
-            </div>
 
-            {/* Email Input */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiMail className="h-5 w-5 text-gray-400" />
-                </div>
+              <div>
                 <input
-                  id="email"
                   type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3 sm:py-3.5 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base transition-all hover:border-gray-300"
-                  placeholder="your@email.com"
+                  className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3.5 text-base text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
                 />
               </div>
-            </div>
 
-            {/* Password Input */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Mật khẩu
-              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
-                  id="password"
                   type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Mật khẩu"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-12 py-3 sm:py-3.5 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base transition-all hover:border-gray-300"
-                  placeholder="••••••••"
+                  minLength={6}
+                  className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3.5 pr-12 text-base text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                 >
-                  {showPassword ? (
-                    <FiEyeOff className="h-5 w-5" />
-                  ) : (
-                    <FiEye className="h-5 w-5" />
-                  )}
+                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                 </button>
               </div>
-              {/* Password Strength Indicator */}
-              {password && (
-                <div className="mt-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${passwordStrength.color} transition-all duration-300`}
-                        style={{ width: `${(passwordStrength.level / 3) * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs font-medium text-gray-600">{passwordStrength.text}</span>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Confirm Password Input */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                Xác nhận mật khẩu
-              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
-                  id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  placeholder="Xác nhận mật khẩu"
                   required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full pl-11 pr-12 py-3 sm:py-3.5 border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base transition-all hover:border-gray-300"
-                  placeholder="••••••••"
+                  className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3.5 pr-12 text-base text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                 >
-                  {showConfirmPassword ? (
-                    <FiEyeOff className="h-5 w-5" />
-                  ) : (
-                    <FiEye className="h-5 w-5" />
-                  )}
+                  {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                 </button>
               </div>
-              {/* Match Indicator */}
-              {confirmPassword && (
-                <div className="mt-2 flex items-center gap-1 text-xs">
-                  {password === confirmPassword ? (
-                    <>
-                      <FiCheck className="w-4 h-4 text-green-500" />
-                      <span className="text-green-600 font-medium">Mật khẩu khớp</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-red-600">Mật khẩu không khớp</span>
-                    </>
-                  )}
-                </div>
-              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-3.5 px-6 rounded-full transition-colors disabled:opacity-50 text-base"
+              >
+                {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
+              </button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-black text-gray-500">hoặc</span>
+              </div>
             </div>
 
-            {/* Terms */}
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                required
-                className="w-4 h-4 mt-1 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-              <label className="ml-2 text-sm text-gray-600">
-                Tôi đồng ý với{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
-                  Điều khoản dịch vụ
-                </a>
-                {' '}và{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
-                  Chính sách bảo mật
-                </a>
-              </label>
+            <div className="text-center">
+              <p className="text-base text-gray-500">
+                Đã có tài khoản?{' '}
+                <button
+                  onClick={() => router.push('/login')}
+                  className="text-primary-500 hover:underline font-semibold"
+                >
+                  Đăng nhập ngay
+                </button>
+              </p>
             </div>
 
-            {/* Submit Button */}
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 px-4 border border-transparent rounded-xl shadow-lg text-base sm:text-lg font-semibold text-white bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transform hover:scale-[1.02] transition-all"
+              onClick={() => router.push('/')}
+              className="hidden lg:block w-full bg-transparent hover:bg-white/5 text-gray-400 font-bold py-3 px-6 rounded-full border border-gray-700 transition-colors text-sm"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Đang đăng ký...</span>
-                </>
-              ) : (
-                <>
-                  <span>Đăng ký</span>
-                  <FiArrowRight className="w-5 h-5" />
-                </>
-              )}
+              Quay lại trang chủ
             </button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Đã có tài khoản?</span>
-            </div>
           </div>
-
-          {/* Login Link */}
-          <div className="text-center">
-            <Link 
-              href="/login" 
-              className="font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1 group text-sm sm:text-base"
-            >
-              Đăng nhập ngay
-              <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link 
-            href="/" 
-            className="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center gap-1 group"
-          >
-            ← Quay lại trang chủ
-          </Link>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
     </div>
   );
 }

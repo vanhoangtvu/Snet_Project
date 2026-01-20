@@ -12,11 +12,11 @@
         <relativePath/>
     </parent>
     
-    <groupId>com.pixshare</groupId>
-    <artifactId>pixshare-backend</artifactId>
-    <version>1.0.0</version>
-    <name>PixShare Backend</name>
-    <description>Backend for PixShare - Photo, Video and Chat Sharing Platform</description>
+    <groupId>com.snet</groupId>
+    <artifactId>snet-backend</artifactId>
+    <version>2.0.0</version>
+    <name>Snet Backend</name>
+    <description>Backend for Snet - Social Network and File Sharing Platform</description>
     
     <properties>
         <java.version>17</java.version>
@@ -139,6 +139,26 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>setup-ip</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <arguments>
+                                <argument>get-server-ip.sh</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

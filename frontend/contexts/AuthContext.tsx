@@ -62,45 +62,108 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuth = async () => {
     try {
-      if (authService.isAuthenticated()) {
-        const userData = await apiService.getCurrentUser();
-        setUser(userData);
+      const token = authService.getToken();
+      console.log('🔍 checkAuth - Token:', token ? '✓ Found' : '✗ Not found');
+      
+      if (!token) {
+        console.log('❌ No token');
+        setLoading(false);
+        return;
+      }
+
+      // Kiểm tra token còn hạn không
+      if (!authService.isAuthenticated()) {
+        console.log('❌ Token expired');
+        authService.clearAllData();
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Lấy user từ localStorage ngay
+      const cachedUser = authService.getUser();
+      console.log('💾 Cached user:', cachedUser?.email || 'None');
+      
+      if (cachedUser) {
+        console.log('✅ Setting cached user immediately');
+        setUser(cachedUser);
+        setLoading(false);
+        
+        // Fetch API ở background để cập nhật (không block)
+        apiService.getCurrentUser()
+          .then(userData => {
+            console.log('✅ Updated user from API:', userData.email);
+            setUser(userData);
+            authService.setUser(userData);
+          })
+          .catch(apiError => {
+            console.error('⚠️ API error:', apiError.response?.status, apiError.message);
+            // Chỉ clear auth nếu 401 và không có cached user
+            if (apiError.response?.status === 401) {
+              console.log('🔐 401 - Token invalid, clearing auth');
+              authService.clearAllData();
+              setUser(null);
+              if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+              }
+            }
+            // Nếu lỗi khác, giữ cached user
+          });
+      } else {
+        // Không có cached user, fetch từ API
+        console.log('🔄 No cached user, fetching from API...');
+        try {
+          const userData = await apiService.getCurrentUser();
+          console.log('✅ Got user from API:', userData.email);
+          setUser(userData);
+          authService.setUser(userData);
+          setLoading(false);
+        } catch (apiError: any) {
+          console.error('❌ API Error:', apiError.response?.status);
+          if (apiError.response?.status === 401) {
+            console.log('🔐 401 - No token or invalid token');
+            authService.clearAllData();
+            setUser(null);
+          }
+          setLoading(false);
+        }
       }
     } catch (error: any) {
-      console.error('Auth check failed:', error.message);
-      // Xóa tất cả dữ liệu nếu xác thực thất bại
-      authService.clearAllData();
-      setUser(null);
-    } finally {
+      console.error('❌ Auth check failed:', error);
       setLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     const response = await apiService.login({ email, password });
-    console.log('Login response:', response);
+    console.log('✅ Login response:', response);
+    
+    // Lưu token TRƯỚC khi redirect
     authService.setToken(response.token);
+    console.log('💾 Token saved to localStorage');
     
     // Load full user info after login
     try {
       const fullUser = await apiService.getCurrentUser();
-      console.log('Full user from API:', fullUser);
+      console.log('✅ Full user from API:', fullUser);
       
-      // Ensure role and verified are preserved from login if missing from getCurrentUser
       const mergedUser = {
         ...fullUser,
         role: fullUser.role || response.role,
         verified: fullUser.verified !== undefined ? fullUser.verified : (response.verified || false)
       };
       
-      console.log('Merged user object:', mergedUser);
+      console.log('✅ Merged user object:', mergedUser);
       setUser(mergedUser);
       authService.setUser(mergedUser);
+      
+      // Redirect AFTER token and user are saved
+      router.push('/dashboard');
     } catch (error) {
-      console.error('Failed to load full user info:', error);
+      console.error('❌ Failed to load full user info:', error);
+      // Vẫn redirect ngay cả khi lỗi, vì token đã được lưu
+      router.push('/dashboard');
     }
-    
-    router.push('/dashboard');
   };
 
   const register = async (email: string, password: string, displayName: string) => {
