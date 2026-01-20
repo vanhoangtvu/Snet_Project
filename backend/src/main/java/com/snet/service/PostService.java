@@ -39,7 +39,15 @@ public class PostService {
     // Lấy danh sách bài đăng public
     public Page<PostDTO> getPublicPosts(int page, int size, User currentUser) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Post> posts = postRepository.findPublicPosts(pageable);
+        Page<Post> posts;
+        
+        if (currentUser != null) {
+            // Lấy: PUBLIC posts + FRIENDS_ONLY posts từ bạn bè + bài của chính mình
+            posts = postRepository.findFriendsPosts(currentUser, pageable);
+        } else {
+            // Chỉ lấy PUBLIC posts nếu chưa đăng nhập
+            posts = postRepository.findPublicPosts(pageable);
+        }
         
         return posts.map(post -> {
             boolean likedByCurrentUser = currentUser != null && 
