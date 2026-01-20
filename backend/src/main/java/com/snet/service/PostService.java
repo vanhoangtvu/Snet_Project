@@ -37,17 +37,30 @@ public class PostService {
     @Autowired
     private CommentLikeRepository commentLikeRepository;
 
+    @Autowired
+    private FriendshipRepository friendshipRepository;
+
     // Lấy danh sách bài đăng public
     public Page<PostDTO> getPublicPosts(int page, int size, User currentUser) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> posts;
         
         if (currentUser != null) {
-            // Lấy: PUBLIC posts + FRIENDS_ONLY posts từ bạn bè + bài của chính mình
+            // Lấy danh sách bạn bè từ database
+            List<Friendship> friendships = friendshipRepository.findAllFriendships(currentUser, FriendshipStatus.ACCEPTED);
             List<User> friends = new ArrayList<>();
             friends.add(currentUser); // Thêm chính mình
-            // TODO: Thêm danh sách bạn bè thực tế từ Friendship table
-            posts = postRepository.findPostsFromFriends(friends, pageable);
+            
+            // Thêm bạn bè vào list
+            for (Friendship f : friendships) {
+                if (f.getUser().equals(currentUser)) {
+                    friends.add(f.getFriend());
+                } else {
+                    friends.add(f.getUser());
+                }
+            }
+            
+            posts = postRepository.findPostsForUser(currentUser, friends, pageable);
         } else {
             // Chỉ lấy PUBLIC posts nếu chưa đăng nhập
             posts = postRepository.findPublicPosts(pageable);
