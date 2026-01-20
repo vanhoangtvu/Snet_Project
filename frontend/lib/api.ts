@@ -442,6 +442,11 @@ class ApiService {
     return response.data;
   }
 
+  async getPostLikes(postId: number, page = 0, size = 50) {
+    const response = await this.api.get(`/posts/${postId}/likes?page=${page}&size=${size}`);
+    return response.data;
+  }
+
   async deleteComment(commentId: number) {
     const response = await this.api.delete(`/posts/comments/${commentId}`);
     return response.data;

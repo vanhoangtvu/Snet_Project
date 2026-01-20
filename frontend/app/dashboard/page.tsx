@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true);
   const [friends, setFriends] = useState<any[]>([]);
   const [showComments, setShowComments] = useState<{ [key: number]: boolean }>({});
+  const [showLikes, setShowLikes] = useState<{ [key: number]: boolean }>({});
+  const [likes, setLikes] = useState<{ [key: number]: any[] }>({});
   const [commentContent, setCommentContent] = useState<{ [key: number]: string }>({});
   const [comments, setComments] = useState<{ [key: number]: any[] }>({});
   const [showPostMenu, setShowPostMenu] = useState<{ [key: number]: boolean }>({});
@@ -275,6 +277,20 @@ export default function DashboardPage() {
         setLikedComments(newLikedComments);
       } catch (error) {
         console.error('Failed to load comments:', error);
+      }
+    }
+  };
+
+  const toggleLikes = async (postId: number) => {
+    const isShowing = showLikes[postId];
+    setShowLikes({ ...showLikes, [postId]: !isShowing });
+    
+    if (!isShowing && !likes[postId]) {
+      try {
+        const response = await apiService.getPostLikes(postId, 0, 50);
+        setLikes({ ...likes, [postId]: response.content || [] });
+      } catch (error) {
+        console.error('Failed to load likes:', error);
       }
     }
   };
@@ -852,11 +868,34 @@ export default function DashboardPage() {
 
                 {/* Post Stats */}
                 <div className="px-4 py-2 flex items-center justify-between text-sm text-gray-400 border-t border-gray-700">
-                  <span>{post.likeCount || 0} lượt thích</span>
+                  <button onClick={() => toggleLikes(post.id)} className="hover:text-primary-500 cursor-pointer">
+                    {post.likeCount || 0} lượt thích
+                  </button>
                   <div className="flex gap-3">
                     <span>{post.commentCount || 0} bình luận</span>
                   </div>
                 </div>
+
+                {/* Likes Modal */}
+                {showLikes[post.id] && (
+                  <div className="px-4 py-3 bg-white/5 border-t border-gray-700 max-h-64 overflow-y-auto">
+                    {likes[post.id]?.length > 0 ? (
+                      likes[post.id].map((user: any) => (
+                        <div key={user.id} className="flex items-center gap-2 py-2 hover:bg-white/5 rounded px-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-xs font-bold">
+                            {user.displayName?.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold">{user.displayName}</p>
+                            <p className="text-xs text-gray-500">@{user.email?.split('@')[0]}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">Chưa có lượt thích</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Post Actions */}
                 <div className="px-2 md:px-4 py-2 flex items-center justify-around border-t border-gray-700">
