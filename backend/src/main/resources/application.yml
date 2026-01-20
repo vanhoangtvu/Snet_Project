@@ -1,9 +1,10 @@
 spring:
   application:
     name: snet-backend
+    context-initializer-classes: com.snet.config.IpConfigInitializer
   
   datasource:
-    url: jdbc:mysql://localhost:3306/SNet_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
+    url: jdbc:mysql://localhost:3306/snet_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
     username: root
     password: 1111
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -45,7 +46,7 @@ spring:
 server:
   port: 8086
   address: 0.0.0.0
-  url: http://123.28.149.142:8086
+  url: ${app.api-url:http://localhost:8086}
   error:
     include-message: always
     include-binding-errors: always

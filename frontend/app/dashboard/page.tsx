@@ -3,11 +3,13 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { SnetLogo } from '@/components/icons/SnetIcon';
+import { VerifiedIcon } from '@/components/icons/Icons';
 import { 
   FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
   FiMenu, FiLogOut, FiSettings, FiUser, FiImage, FiVideo,
   FiSmile, FiMoreHorizontal, FiThumbsUp, FiMessageCircle, FiShare2,
-  FiEdit2, FiTrash2, FiEyeOff, FiBookmark, FiFlag, FiX, FiCheck
+  FiEdit2, FiTrash2, FiEyeOff, FiBookmark, FiFlag, FiX, FiCheck,
+  FiGlobe, FiLock, FiUserCheck
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
@@ -38,6 +40,7 @@ export default function DashboardPage() {
   const isLoadingRef = useRef(false); // Prevent duplicate requests
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [postContent, setPostContent] = useState('');
+  const [postPrivacy, setPostPrivacy] = useState('PUBLIC');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -187,7 +190,7 @@ export default function DashboardPage() {
     try {
       const formData = new FormData();
       formData.append('content', postContent);
-      formData.append('privacy', 'PUBLIC');
+      formData.append('privacy', postPrivacy);
       
       if (selectedFile) {
         formData.append('file', selectedFile);
@@ -195,6 +198,7 @@ export default function DashboardPage() {
       
       await apiService.createPost(formData);
       setPostContent('');
+      setPostPrivacy('PUBLIC');
       setSelectedFile(null);
       setPreviewUrl(null);
       // Add new post to top without reloading
@@ -450,8 +454,12 @@ export default function DashboardPage() {
   };
 
   const getUserInitial = (name?: string) => {
-    if (!name) return 'U';
-    return name.charAt(0).toUpperCase();
+    if (!name) return 'US';
+    const words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   const getUserName = (name?: string) => {
@@ -637,6 +645,45 @@ export default function DashboardPage() {
                       className="hidden"
                     />
                   </label>
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white/5 border border-gray-700 rounded-lg hover:bg-white/10 transition-colors text-xs md:text-sm">
+                      {postPrivacy === 'PUBLIC' && <><FiGlobe className="w-4 h-4" /> Công khai</>}
+                      {postPrivacy === 'FRIENDS_ONLY' && <><FiUserCheck className="w-4 h-4" /> Bạn bè</>}
+                      {postPrivacy === 'PRIVATE' && <><FiLock className="w-4 h-4" /> Riêng tư</>}
+                    </button>
+                    <div className="absolute left-0 mt-1 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                      <button
+                        onClick={() => setPostPrivacy('PUBLIC')}
+                        className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-white/10 transition-colors text-left text-sm ${postPrivacy === 'PUBLIC' ? 'text-primary-500 bg-white/5' : ''}`}
+                      >
+                        <FiGlobe className="w-4 h-4" />
+                        <div>
+                          <div className="font-semibold">Công khai</div>
+                          <div className="text-xs text-gray-400">Mọi người có thể xem</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setPostPrivacy('FRIENDS_ONLY')}
+                        className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-white/10 transition-colors text-left text-sm border-t border-gray-700 ${postPrivacy === 'FRIENDS_ONLY' ? 'text-primary-500 bg-white/5' : ''}`}
+                      >
+                        <FiUserCheck className="w-4 h-4" />
+                        <div>
+                          <div className="font-semibold">Bạn bè</div>
+                          <div className="text-xs text-gray-400">Chỉ bạn bè xem</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setPostPrivacy('PRIVATE')}
+                        className={`w-full flex items-center gap-2 px-4 py-3 hover:bg-white/10 transition-colors text-left text-sm border-t border-gray-700 ${postPrivacy === 'PRIVATE' ? 'text-primary-500 bg-white/5' : ''}`}
+                      >
+                        <FiLock className="w-4 h-4" />
+                        <div>
+                          <div className="font-semibold">Riêng tư</div>
+                          <div className="text-xs text-gray-400">Chỉ bạn xem</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <button 
                   onClick={handleCreatePost}
@@ -669,7 +716,10 @@ export default function DashboardPage() {
                       {getUserInitial(post.userDisplayName)}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm md:text-base">{getUserName(post.userDisplayName)}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-semibold text-sm md:text-base">{getUserName(post.userDisplayName)}</p>
+                        {post.userVerified && <VerifiedIcon className="text-blue-400" size={16} />}
+                      </div>
                       <p className="text-xs text-gray-400">{formatTime(post.createdAt)}</p>
                     </div>
                   </div>
@@ -873,9 +923,10 @@ export default function DashboardPage() {
                                 )}
                                 <button 
                                   onClick={() => handleLikeComment(post.id, comment.id)}
-                                  className={`hover:text-primary-500 transition-colors font-semibold ${likedComments.has(comment.id) ? 'text-primary-500' : ''}`}
+                                  className={`hover:text-primary-500 transition-colors font-semibold flex items-center gap-1 ${likedComments.has(comment.id) ? 'text-primary-500' : ''}`}
                                 >
-                                  {likedComments.has(comment.id) ? '❤️ Đã thích' : 'Thích'}
+                                  <FiThumbsUp className="w-4 h-4" />
+                                  {likedComments.has(comment.id) ? 'Đã thích' : 'Thích'}
                                 </button>
                                 <button 
                                   onClick={() => handleReplyComment(post.id, comment.id)}

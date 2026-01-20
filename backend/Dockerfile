@@ -12,8 +12,12 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
+RUN apk add --no-cache curl bash
+
 COPY --from=build /app/target/*.jar app.jar
+COPY get-server-ip.sh .
+RUN chmod +x get-server-ip.sh
 
 EXPOSE 8086
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["sh", "-c", "./get-server-ip.sh && java -jar app.jar"]

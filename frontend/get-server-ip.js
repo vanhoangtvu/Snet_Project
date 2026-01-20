@@ -6,11 +6,12 @@ https.get('https://api.ipify.org?format=json', (res) => {
   res.on('data', chunk => data += chunk);
   res.on('end', () => {
     const ip = JSON.parse(data).ip;
-    const env = `NEXT_PUBLIC_API_URL=http://${ip}:8086\n`;
+    const env = `NEXT_PUBLIC_API_URL=http://${ip}:8086\nNEXT_PUBLIC_WS_URL=ws://${ip}:8086\n`;
     fs.writeFileSync('.env.local', env);
     console.log(`✅ API URL set to: http://${ip}:8086`);
+    console.log(`✅ WebSocket URL set to: ws://${ip}:8086`);
   });
 }).on('error', () => {
   console.log('⚠️ Could not get public IP, using localhost');
-  fs.writeFileSync('.env.local', 'NEXT_PUBLIC_API_URL=http://localhost:8086\n');
+  fs.writeFileSync('.env.local', 'NEXT_PUBLIC_API_URL=http://localhost:8086\nNEXT_PUBLIC_WS_URL=ws://localhost:8086\n');
 });

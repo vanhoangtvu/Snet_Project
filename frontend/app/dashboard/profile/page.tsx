@@ -3,11 +3,13 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { SnetLogo } from '@/components/icons/SnetIcon';
+import { VerifiedIcon } from '@/components/icons/Icons';
 import { 
   FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
   FiMenu, FiLogOut, FiSettings, FiUser, FiCalendar, FiEdit2,
   FiMapPin, FiLink, FiBriefcase, FiBuilding,
-  FiFacebook, FiInstagram, FiTwitter, FiLinkedin, FiX
+  FiFacebook, FiInstagram, FiTwitter, FiLinkedin, FiX,
+  FiMessageCircle, FiThumbsUp, FiVideo, FiPlay
 } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { apiService } from '@/lib/api';
@@ -67,7 +69,12 @@ export default function ProfilePage() {
   };
 
   const getUserInitial = (name: string) => {
-    return name?.charAt(0).toUpperCase() || '?';
+    if (!name) return 'US';
+    const words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   const formatDate = (dateString: string) => {
@@ -211,9 +218,11 @@ export default function ProfilePage() {
             </div>
 
             <div className="mb-4">
-              <h1 className="text-xl md:text-2xl font-bold">{user?.displayName}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold">{user?.displayName}</h1>
+                {user?.verified && <VerifiedIcon className="text-blue-400" size={20} />}
+              </div>
               <p className="text-gray-400">@{user?.email?.split('@')[0]}</p>
-              {user?.verified && <span className="text-blue-400 text-sm">✓ Verified</span>}
             </div>
 
             {user?.bio && (
@@ -362,10 +371,10 @@ export default function ProfilePage() {
                         <p className="text-sm md:text-base mb-2">{post.content}</p>
                         <div className="flex gap-6 text-gray-400 text-sm">
                           <button className="hover:text-primary-500 transition-colors">
-                            💬 {post.commentCount}
+                            <FiMessageCircle className="w-4 h-4" /> {post.commentCount}
                           </button>
                           <button className="hover:text-red-500 transition-colors">
-                            ❤️ {post.likeCount}
+                            <FiThumbsUp className="w-4 h-4" /> {post.likeCount}
                           </button>
                         </div>
                       </div>
@@ -406,20 +415,20 @@ export default function ProfilePage() {
                       {post.videoUrl && !post.fileUrl && (
                         <div className="w-full h-full bg-black flex items-center justify-center">
                           <div className="text-center">
-                            <div className="text-4xl mb-2">🎥</div>
+                            <div className="text-4xl mb-2"><FiVideo className="w-8 h-8" /></div>
                             <p className="text-xs text-gray-400">{post.videoPlatform || 'Video'}</p>
                           </div>
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                         <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="text-2xl">❤️ {post.likeCount}</div>
-                          <div className="text-sm">💬 {post.commentCount}</div>
+                          <div className="text-2xl"><FiThumbsUp className="w-4 h-4" /> {post.likeCount}</div>
+                          <div className="text-sm"><FiMessageCircle className="w-4 h-4" /> {post.commentCount}</div>
                         </div>
                       </div>
                       {post.fileType?.startsWith('video/') && (
                         <div className="absolute top-2 right-2 bg-black/70 rounded-full p-2">
-                          <div className="text-white text-lg">▶️</div>
+                          <div className="text-white text-lg"><FiPlay className="w-5 h-5" /></div>
                         </div>
                       )}
                     </div>
@@ -446,7 +455,7 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-bold">{post.userDisplayName}</span>
                           <span className="text-gray-400 text-sm">@{post.userName}</span>
-                          {post.userVerified && <span className="text-blue-400 text-xs">✓</span>}
+                          {post.userVerified && <VerifiedIcon className="text-blue-400" size={16} />}
                         </div>
                         <p className="text-sm md:text-base mb-2">{post.content}</p>
                         {post.fileUrl && (
@@ -458,10 +467,10 @@ export default function ProfilePage() {
                         )}
                         <div className="flex gap-6 text-gray-400 text-sm">
                           <button className="hover:text-primary-500 transition-colors">
-                            💬 {post.commentCount}
+                            <FiMessageCircle className="w-4 h-4" /> {post.commentCount}
                           </button>
                           <button className="hover:text-red-500 transition-colors">
-                            ❤️ {post.likeCount}
+                            <FiThumbsUp className="w-4 h-4" /> {post.likeCount}
                           </button>
                         </div>
                       </div>
@@ -583,11 +592,13 @@ export default function ProfilePage() {
               )}
 
               <div className="flex gap-6 text-gray-400 text-sm">
-                <button className="hover:text-primary-500 transition-colors">
-                  💬 {selectedMedia.commentCount}
+                <button className="hover:text-primary-500 transition-colors flex items-center gap-1">
+                  <FiMessageCircle className="w-4 h-4" />
+                  {selectedMedia.commentCount}
                 </button>
-                <button className="hover:text-red-500 transition-colors">
-                  ❤️ {selectedMedia.likeCount}
+                <button className="hover:text-red-500 transition-colors flex items-center gap-1">
+                  <FiThumbsUp className="w-4 h-4" />
+                  {selectedMedia.likeCount}
                 </button>
               </div>
             </div>
