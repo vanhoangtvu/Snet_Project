@@ -23,8 +23,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.user = :user ORDER BY p.createdAt DESC")
     Page<Post> findByUser(@Param("user") User user, Pageable pageable);
     
-    // Lấy bài đăng từ friends (để sau này mở rộng)
-    @Query("SELECT p FROM Post p WHERE p.user IN :friends AND p.privacy IN ('PUBLIC', 'FRIENDS_ONLY') ORDER BY p.createdAt DESC")
+    // Lấy PUBLIC posts + FRIENDS_ONLY posts từ bạn bè + bài của chính mình
+    @Query("SELECT p FROM Post p WHERE p.privacy = 'PUBLIC' OR (p.user IN :friends AND p.privacy IN ('PUBLIC', 'FRIENDS_ONLY')) ORDER BY p.createdAt DESC")
     Page<Post> findPostsFromFriends(@Param("friends") List<User> friends, Pageable pageable);
     
     // Đếm số bài đăng của user

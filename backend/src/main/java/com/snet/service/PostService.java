@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +44,10 @@ public class PostService {
         
         if (currentUser != null) {
             // Lấy: PUBLIC posts + FRIENDS_ONLY posts từ bạn bè + bài của chính mình
-            posts = postRepository.findFriendsPosts(currentUser, pageable);
+            List<User> friends = new ArrayList<>();
+            friends.add(currentUser); // Thêm chính mình
+            // TODO: Thêm danh sách bạn bè thực tế từ Friendship table
+            posts = postRepository.findPostsFromFriends(friends, pageable);
         } else {
             // Chỉ lấy PUBLIC posts nếu chưa đăng nhập
             posts = postRepository.findPublicPosts(pageable);
