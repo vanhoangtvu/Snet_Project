@@ -1,8 +1,8 @@
-# PixShare - GitHub Setup Guide
+# SNet - GitHub Setup Guide
 
 ## 📋 Dự án đã được push lên GitHub
 
-**Repository:** https://github.com/vanhoangtvu/PixShare-Project
+**Repository:** https://github.com/vanhoangtvu/SNet-Project
 
 ### ✅ Hoàn thành
 
@@ -39,8 +39,8 @@
 
 1. **Clone repository:**
 ```bash
-git clone git@github.com:vanhoangtvu/PixShare-Project.git
-cd PixShare-Project
+git clone git@github.com:vanhoangtvu/SNet-Project.git
+cd SNet-Project
 ```
 
 2. **Setup Backend:**
@@ -70,15 +70,15 @@ npm run dev
 ### 📝 Commit History
 
 ```
-2b6f83e - feat: Complete PixShare project with profile enhancements, video support, and auth fixes
+2b6f83e - feat: Complete SNet project with profile enhancements, video support, and auth fixes
 34d3b6f - chore: remove unnecessary documentation files
 7c1e6f5 - docs: update README with modern design and comprehensive documentation
-9f1616c - feat: PixShare - Social Media & File Sharing Platform
+9f1616c - feat: SNet - Social Media & File Sharing Platform
 ```
 
 ### 🔗 Liên kết
 
-- GitHub: https://github.com/vanhoangtvu/PixShare-Project
+- GitHub: https://github.com/vanhoangtvu/SNet-Project
 - Developer: Nguyen Van Hoang
 - Email: nguyenhoang4556z@gmail.com
 

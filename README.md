@@ -1,8 +1,8 @@
-# 🌟 PixShare
+# 🌟 SNet
 
 <div align="center">
 
-![PixShare Banner](https://img.shields.io/badge/PixShare-Social%20Media%20Platform-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3TDEyIDEyTDIyIDdMMTIgMloiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0yIDEyTDEyIDE3TDIyIDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=)
+![SNet Banner](https://img.shields.io/badge/SNet-Social%20Media%20Platform-6366f1?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiA3TDEyIDEyTDIyIDdMMTIgMloiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0yIDEyTDEyIDE3TDIyIDEyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=)
 
 **🎯 Modern Social Media & File Sharing Platform**
 
@@ -30,7 +30,7 @@
 
 ## 📖 Table of Contents
 
-- [🎯 About PixShare](#-about-pixshare)
+- [🎯 About SNet](#-about-pixshare)
 - [✨ Features](#-features)
 - [🎬 Demo & Screenshots](#-demo--screenshots)
 - [🏗️ Architecture](#️-architecture)
@@ -49,9 +49,9 @@
 
 ---
 
-## 🎯 About PixShare
+## 🎯 About SNet
 
-**PixShare** là một nền tảng mạng xã hội full-stack hiện đại, kết hợp tính năng chia sẻ file mạnh mẽ với trải nghiệm social media trực quan.
+**SNet** là một nền tảng mạng xã hội full-stack hiện đại, kết hợp tính năng chia sẻ file mạnh mẽ với trải nghiệm social media trực quan.
 
 ### 🌟 Highlights
 
@@ -64,7 +64,7 @@
 - 🎨 **Modern UI** - TailwindCSS, responsive design
 - ⚡ **High Performance** - Optimized for large files
 
-### 💡 Why PixShare?
+### 💡 Why SNet?
 
 - ✅ **Open Source** - Free và có thể tùy chỉnh
 - ✅ **Production Ready** - Docker, secure authentication
@@ -362,8 +362,8 @@ Optional:
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone git@github.com:vanhoangtvu/PixShare-Project.git
-cd PixShare-Project
+git clone git@github.com:vanhoangtvu/SNet-Project.git
+cd SNet-Project
 ```
 
 ### 2️⃣ Setup Database
@@ -373,13 +373,13 @@ cd PixShare-Project
 docker run -d \
   --name pixshare-mysql \
   -e MYSQL_ROOT_PASSWORD=1111 \
-  -e MYSQL_DATABASE=PixShare_db \
+  -e MYSQL_DATABASE=SNet_db \
   -p 3306:3306 \
   mysql:8.0
 
 # Or use existing MySQL Server
 mysql -u root -p
-CREATE DATABASE PixShare_db;
+CREATE DATABASE SNet_db;
 ```
 
 ### 3️⃣ Configure Environment
@@ -389,7 +389,7 @@ CREATE DATABASE PixShare_db;
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/PixShare_db
+    url: jdbc:mysql://localhost:3306/SNet_db
     username: root
     password: 1111
 ```
@@ -428,7 +428,7 @@ Access **http://localhost:3006** and login with:
 - **Email:** `admin@pixshare.com`
 - **Password:** `admin123`
 
-🎉 **Done!** Explore PixShare!
+🎉 **Done!** Explore SNet!
 
 ---
 
@@ -441,7 +441,7 @@ File: `backend/src/main/resources/application.yml`
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/PixShare_db
+    url: jdbc:mysql://localhost:3306/SNet_db
     username: root
     password: your_password
   
@@ -480,7 +480,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8086
 
 ### Docker Configuration
 
-PixShare uses **host MySQL** (not Docker MySQL). The `docker-compose.yml` is configured for:
+SNet uses **host MySQL** (not Docker MySQL). The `docker-compose.yml` is configured for:
 - Backend container
 - Frontend container
 - Connection to host MySQL via `host.docker.internal`
@@ -490,7 +490,7 @@ File: `.env` (root directory)
 ```env
 # MySQL (on host machine)
 MYSQL_ROOT_PASSWORD=1111
-MYSQL_DATABASE=PixShare_db
+MYSQL_DATABASE=SNet_db
 
 # Ports
 BACKEND_PORT=8086
@@ -688,7 +688,7 @@ Authorization: Bearer <your_jwt_token>
 ## 📂 Project Structure
 
 ```
-PixShare/
+SNet/
 │
 ├── backend/                      # Spring Boot Backend
 │   ├── src/main/java/com/pixshare/
@@ -698,7 +698,7 @@ PixShare/
 │   │   ├── model/               # JPA Entities
 │   │   ├── repository/          # Spring Data Repositories
 │   │   ├── service/             # Business Logic
-│   │   └── PixShareApplication.java
+│   │   └── SNetApplication.java
 │   ├── src/main/resources/
 │   │   └── application.yml      # Configuration
 │   ├── Dockerfile
@@ -888,7 +888,7 @@ docker ps | grep mysql
 
 # Create database
 mysql -u root -p
-CREATE DATABASE PixShare_db;
+CREATE DATABASE SNet_db;
 ```
 
 ### Frontend can't connect to backend
@@ -1030,7 +1030,7 @@ Need help or have questions?
 
 [![Email](https://img.shields.io/badge/Email-nguyenhoang4556z@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:nguyenhoang4556z@gmail.com)
 [![Phone](https://img.shields.io/badge/Phone-0889559357-25D366?style=for-the-badge&logo=phone&logoColor=white)](tel:0889559357)
-[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-181717?style=for-the-badge&logo=github)](https://github.com/vanhoangtvu/PixShare-Project/issues)
+[![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-181717?style=for-the-badge&logo=github)](https://github.com/vanhoangtvu/SNet-Project/issues)
 
 **Response Time:** Usually within 24 hours  
 **Languages:** Vietnamese (native), English
@@ -1055,15 +1055,15 @@ Special thanks to:
 
 ## ⭐ Star This Repository!
 
-**If you find PixShare useful, please give it a star!**
+**If you find SNet useful, please give it a star!**
 
-[![GitHub stars](https://img.shields.io/github/stars/vanhoangtvu/PixShare-Project?style=social)](https://github.com/vanhoangtvu/PixShare-Project/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/vanhoangtvu/PixShare-Project?style=social)](https://github.com/vanhoangtvu/PixShare-Project/network/members)
+[![GitHub stars](https://img.shields.io/github/stars/vanhoangtvu/SNet-Project?style=social)](https://github.com/vanhoangtvu/SNet-Project/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/vanhoangtvu/SNet-Project?style=social)](https://github.com/vanhoangtvu/SNet-Project/network/members)
 
 ---
 
 **Made with ❤️ by [Nguyen Van Hoang](https://github.com/vanhoangtvu)**
 
-© 2024 PixShare. All rights reserved.
+© 2024 SNet. All rights reserved.
 
 </div>

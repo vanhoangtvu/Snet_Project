@@ -3,7 +3,7 @@ spring:
     name: snet-backend
   
   datasource:
-    url: jdbc:mysql://localhost:3306/PixShare_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
+    url: jdbc:mysql://localhost:3306/SNet_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=300000&socketTimeout=600000
     username: root
     password: 1111
     driver-class-name: com.mysql.cj.jdbc.Driver
