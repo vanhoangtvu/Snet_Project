@@ -103,7 +103,7 @@ export default function MentionInput({ value, onChange, onKeyPress, placeholder,
                 index === selectedIndex ? 'bg-white/10' : ''
               }`}
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
                 {friend.displayName.charAt(0).toUpperCase()}
               </div>
               <span className="text-sm">{friend.displayName}</span>

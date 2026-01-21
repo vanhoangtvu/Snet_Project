@@ -135,7 +135,7 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
           <div>
             <label className="block text-sm font-semibold mb-2">Ảnh đại diện</label>
             <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-2xl overflow-hidden">
+              <div className="relative w-20 h-20 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-2xl overflow-hidden">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
                 ) : (

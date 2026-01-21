@@ -186,7 +186,7 @@ export default function ProfilePage() {
             <div className="relative user-menu-container">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base"
+                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base"
               >
                 {user?.displayName?.charAt(0).toUpperCase()}
               </button>
@@ -227,7 +227,7 @@ export default function ProfilePage() {
         <div className="relative">
           {/* Cover Photo */}
           <div 
-            className="h-48 md:h-64 bg-gradient-to-r from-primary-500 to-purple-600 relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            className="h-48 md:h-64 bg-gradient-to-r from-primary-500 to-blue-600 relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => {
               if (user?.id) {
                 window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/cover?size=full&t=${Date.now()}`, '_blank');
@@ -251,7 +251,7 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className="relative">
                 <div 
-                  className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full border-4 border-black flex items-center justify-center font-bold text-3xl md:text-4xl overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity"
+                  className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full border-4 border-black flex items-center justify-center font-bold text-3xl md:text-4xl overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => {
                     if (displayUser?.id) {
                       window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${displayUser.id}/avatar?size=full&t=${Date.now()}`, '_blank');
@@ -427,7 +427,7 @@ export default function ProfilePage() {
                 posts.map((post) => (
                   <div key={post.id} className="border-b border-gray-800 p-4 hover:bg-white/5 transition-colors">
                     <div className="flex gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
                         {getUserInitial(displayUser?.displayName || '')}
                       </div>
                       <div className="flex-1">
@@ -520,7 +520,7 @@ export default function ProfilePage() {
                 likedPosts.map((post) => (
                   <div key={post.id} className="border-b border-gray-800 p-4 hover:bg-white/5 transition-colors">
                     <div className="flex gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
                         {post.userName?.charAt(0).toUpperCase() || '?'}
                       </div>
                       <div className="flex-1">
@@ -642,7 +642,7 @@ export default function ProfilePage() {
             {/* Header */}
             <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold">
                   {selectedMedia.userDisplayName?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div>

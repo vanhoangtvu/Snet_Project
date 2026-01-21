@@ -72,6 +72,7 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [posting, setPosting] = useState(false);
   const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000); // Cache for 1 minute
 
   useEffect(() => {
@@ -204,6 +205,7 @@ export default function DashboardPage() {
   const handleCreatePost = async () => {
     if (!postContent.trim() && !selectedFile) return;
     
+    setPosting(true);
     try {
       const formData = new FormData();
       formData.append('content', postContent);
@@ -226,6 +228,9 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Failed to create post:', error);
+      alert('Đăng bài thất bại. Vui lòng thử lại!');
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -686,7 +691,7 @@ export default function DashboardPage() {
                 <span>Tin nhắn</span>
               </button>
               <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
-                <FiUsers className="w-6 h-6 text-purple-500" />
+                <FiUsers className="w-6 h-6 text-blue-500" />
                 <span>Nhóm</span>
               </button>
             </div>
@@ -794,10 +799,17 @@ export default function DashboardPage() {
                 </div>
                 <button 
                   onClick={handleCreatePost}
-                  disabled={!postContent.trim() && !selectedFile}
-                  className="px-4 md:px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-semibold text-sm md:text-base"
+                  disabled={(!postContent.trim() && !selectedFile) || posting}
+                  className="px-3 md:px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors font-semibold text-xs md:text-base flex items-center gap-2 whitespace-nowrap"
                 >
-                  Đăng
+                  {posting ? (
+                    <>
+                      <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span className="hidden sm:inline">Đang đăng...</span>
+                    </>
+                  ) : (
+                    'Đăng'
+                  )}
                 </button>
               </div>
             </div>
@@ -1263,7 +1275,7 @@ export default function DashboardPage() {
               <h3 className="font-semibold mb-3 px-2">Được tài trợ</h3>
               <div className="space-y-3 mb-6">
                 <div className="p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
-                  <div className="w-full h-32 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg mb-2"></div>
+                  <div className="w-full h-32 bg-gradient-to-br from-primary-500 to-blue-600 rounded-lg mb-2"></div>
                   <p className="text-sm font-semibold">Quảng cáo mẫu</p>
                   <p className="text-xs text-gray-400">example.com</p>
                 </div>
@@ -1277,7 +1289,7 @@ export default function DashboardPage() {
                   friends.map((friend) => (
                     <button key={friend.id} className="w-full flex items-center gap-3 px-2 py-2 hover:bg-white/5 rounded-lg transition-colors text-left">
                       <div className="relative">
-                        <div className="w-9 h-9 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm">
+                        <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
                           {getUserInitial(friend.displayName || "User")}
                         </div>
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-black rounded-full"></div>

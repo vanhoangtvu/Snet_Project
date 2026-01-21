@@ -1,0 +1,28 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="gradBlue1" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#00c6ff"/> <stop offset="1" stop-color="#0072ff"/> </linearGradient>
+    </defs>
+    <rect x="10" y="10" width="180" height="180" rx="45" fill="url(#gradBlue1)"/>
+
+    <g transform="translate(0, -15) scale(0.9) translate(10, 10)">
+        <path d="M70 110 C70 135, 130 135, 130 110" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M55 85 C55 125, 145 125, 145 85 C145 50, 125 35, 100 35 C75 35, 55 50, 55 85 Z" stroke="white" stroke-width="4" fill="none"/>
+        <circle cx="55" cy="85" r="10" fill="white"/>
+        <circle cx="145" cy="85" r="10" fill="white"/>
+        <g fill="white" stroke="white" stroke-width="2">
+            <circle cx="100" cy="55" r="4" stroke="none"/>
+            <circle cx="80" cy="75" r="4" stroke="none"/>
+            <circle cx="120" cy="75" r="4" stroke="none"/>
+            <circle cx="100" cy="90" r="4" stroke="none"/>
+            <line x1="100" y1="55" x2="80" y2="75"/>
+            <line x1="100" y1="55" x2="120" y2="75"/>
+            <line x1="80" y1="75" x2="100" y2="90"/>
+            <line x1="120" y1="75" x2="100" y2="90"/>
+        </g>
+    </g>
+
+    <text x="100" y="165" font-family="Arial, sans-serif" font-weight="900" font-size="26" text-anchor="middle" fill="white" letter-spacing="1">
+        SNET AI
+    </text>
+</svg>
