@@ -1,15 +1,8 @@
 package com.snet.service;
 
 import com.snet.dto.FileResponse;
-import com.snet.model.FileCategory;
-import com.snet.model.FileMetadata;
-import com.snet.model.User;
-import com.snet.model.UserRole;
-import com.snet.repository.FileMetadataRepository;
-import com.snet.repository.MessageRepository;
-import com.snet.repository.PostRepository;
-import com.snet.repository.PublicShareRepository;
-import com.snet.repository.UserRepository;
+import com.snet.model.*;
+import com.snet.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -43,6 +36,7 @@ public class FileService {
     private final PublicShareRepository publicShareRepository;
     private final PostRepository postRepository;
     private final MessageRepository messageRepository;
+    private final FriendshipRepository friendshipRepository;
     
     @Value("${file.max-file-size}")
     private long maxFileSize;
@@ -131,30 +125,55 @@ public class FileService {
             throw new RuntimeException("File has been deleted");
         }
         
-        // Check if user is admin or file owner
+        User currentUser = null;
         if (authentication != null) {
             String userEmail = authentication.getName();
-            System.out.println("👤 Current user email: " + userEmail);
-            
-            User currentUser = userRepository.findByEmail(userEmail)
+            currentUser = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
-            System.out.println("👤 Current user role: " + currentUser.getRole());
-            System.out.println("👤 File owner ID: " + file.getUser().getId() + ", Current user ID: " + currentUser.getId());
-            
-            // Allow if admin or file owner
-            if (currentUser.getRole() == UserRole.ADMIN || 
-                file.getUser().getId().equals(currentUser.getId())) {
-                System.out.println("✅ Access granted! Returning file data (size: " + file.getFileData().length + " bytes)");
-                return file.getFileData();
-            }
-            
-            System.out.println("❌ Access denied - not admin and not file owner");
-        } else {
-            System.out.println("❌ No authentication provided");
+            System.out.println("👤 Current user: " + currentUser.getEmail() + " (Role: " + currentUser.getRole() + ")");
         }
         
-        throw new RuntimeException("Unauthorized to access this file");
+        // Allow if admin or file owner
+        if (currentUser != null && 
+            (currentUser.getRole() == UserRole.ADMIN || 
+             file.getUser().getId().equals(currentUser.getId()))) {
+            System.out.println("✅ Access granted (owner/admin)");
+            return file.getFileData();
+        }
+        
+        // Check if file is used in a post that current user can view
+        List<Post> postsWithFile = postRepository.findAll().stream()
+            .filter(p -> p.getFile() != null && p.getFile().getId().equals(fileId))
+            .collect(java.util.stream.Collectors.toList());
+        
+        for (Post post : postsWithFile) {
+            if (canViewPost(post, currentUser, post.getUser())) {
+                System.out.println("✅ Access granted via post: " + post.getId());
+                return file.getFileData();
+            }
+        }
+        
+        System.out.println("❌ Access denied!");
+        throw new RuntimeException("You don't have permission to access this file");
+    }
+    
+    private boolean canViewPost(Post post, User currentUser, User postOwner) {
+        if (currentUser != null && currentUser.getId().equals(postOwner.getId())) {
+            return true;
+        }
+        
+        switch (post.getPrivacy()) {
+            case PUBLIC:
+                return true;
+            case FRIENDS_ONLY:
+                if (currentUser == null) return false;
+                return friendshipRepository.areFriends(currentUser, postOwner, FriendshipStatus.ACCEPTED);
+            case PRIVATE:
+                return false;
+            default:
+                return false;
+        }
     }
     
     public byte[] getPublicFileData(Long fileId) {
@@ -239,7 +258,7 @@ public class FileService {
         }
     }
     
-    private byte[] rotateImageByExif(byte[] imageData) throws IOException {
+    public byte[] rotateImageByExif(byte[] imageData) throws IOException {
         try {
             ByteArrayInputStream bais = new ByteArrayInputStream(imageData);
             BufferedImage image = ImageIO.read(bais);
@@ -289,13 +308,21 @@ public class FileService {
         int height = image.getHeight();
         BufferedImage rotated;
         
+        // Preserve image type (RGB or RGBA)
+        int imageType = image.getType() == 0 ? BufferedImage.TYPE_INT_RGB : image.getType();
+        
         if (angle == 90 || angle == 270) {
-            rotated = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+            rotated = new BufferedImage(height, width, imageType);
         } else {
-            rotated = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            rotated = new BufferedImage(width, height, imageType);
         }
         
         Graphics2D g2d = rotated.createGraphics();
+        
+        // Better rendering quality
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         if (angle == 90) {
             g2d.translate(height, 0);

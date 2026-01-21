@@ -67,6 +67,7 @@ export default function DashboardPage() {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000); // Cache for 1 minute
 
   useEffect(() => {
     // Chờ auth loading xong
@@ -482,6 +483,10 @@ export default function DashboardPage() {
     return name || 'User';
   };
 
+  const handleAvatarError = (e: any, displayName?: string) => {
+    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect fill='%236366f1' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${displayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white pb-16 md:pb-0">
       {/* Header */}
@@ -530,18 +535,27 @@ export default function DashboardPage() {
             <div className="relative user-menu-container">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold"
+                className="w-10 h-10 rounded-full flex items-center justify-center font-bold overflow-hidden"
               >
-                {getUserInitial(getUserName(user?.displayName))}
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                  alt={user?.displayName}
+                  className="w-full h-full object-cover bg-gray-700"
+                  onError={(e) => {
+                    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect fill='%236366f1' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${user?.displayName?.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                  }}
+                />
               </button>
               
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-700">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-lg">
-                        {getUserInitial(getUserName(user?.displayName))}
-                      </div>
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                        alt={user?.displayName}
+                        className="w-12 h-12 rounded-full object-cover bg-gray-700" onError={(e) => handleAvatarError(e, post?.userDisplayName || user?.displayName || comment?.userDisplayName || reply?.userDisplayName)}
+                      />
                       <div>
                         <p className="font-semibold">{getUserName(user?.displayName)}</p>
                         <p className="text-sm text-gray-400">{user?.email}</p>
@@ -584,9 +598,12 @@ export default function DashboardPage() {
           <aside className="hidden lg:block lg:col-span-3">
             <div className="sticky top-20 space-y-2">
               <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold">
-                  {getUserInitial(getUserName(user?.displayName))}
-                </div>
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                  alt={user?.displayName}
+                  className="w-10 h-10 rounded-full object-cover bg-gray-700"
+                  onError={(e) => handleAvatarError(e, user?.displayName)}
+                />
                 <span className="font-semibold">{getUserName(user?.displayName)}</span>
               </button>
               <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left">
@@ -609,9 +626,12 @@ export default function DashboardPage() {
             {/* Create Post */}
             <div className="bg-white/5 border border-gray-700 rounded-xl p-3 md:p-4">
               <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm md:text-base">
-                  {getUserInitial(getUserName(user?.displayName))}
-                </div>
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                  alt={user?.displayName}
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                  onError={(e) => handleAvatarError(e, user?.displayName)}
+                />
                 <input
                   type="text"
                   placeholder={`${getUserName(user?.displayName)} ơi, bạn đang nghĩ gì?`}
@@ -728,9 +748,14 @@ export default function DashboardPage() {
                 {/* Post Header */}
                 <div className="p-3 md:p-4 flex items-center justify-between overflow-visible">
                   <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base">
-                      {getUserInitial(post.userDisplayName)}
-                    </div>
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${post.userId}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                      alt={post.userDisplayName}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                      onError={(e) => {
+                        e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect fill='%236366f1' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${post.userDisplayName?.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                      }}
+                    />
                     <div>
                       <div className="flex items-center gap-1">
                         <p className="font-semibold text-sm md:text-base">{getUserName(post.userDisplayName)}</p>
@@ -834,9 +859,6 @@ export default function DashboardPage() {
                           <img 
                             src={`${process.env.NEXT_PUBLIC_API_URL}/api/files/${post.fileId}/thumbnail`}
                             alt="Post image"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = `${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`;
-                            }}
                             className="w-full max-h-[70vh] object-contain cursor-pointer hover:opacity-100 transition-opacity brightness-110 contrast-110"
                             style={{ filter: 'brightness(1.1) contrast(1.1)', imageOrientation: 'auto' }}
                             onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
@@ -882,9 +904,12 @@ export default function DashboardPage() {
                     {likes[post.id]?.length > 0 ? (
                       likes[post.id].map((user: any) => (
                         <div key={user.id} className="flex items-center gap-2 py-2 hover:bg-white/5 rounded px-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-xs font-bold">
-                            {user.displayName?.charAt(0).toUpperCase()}
-                          </div>
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                            alt={user.displayName}
+                            className="w-8 h-8 rounded-full object-cover bg-gray-700"
+                            onError={(e) => handleAvatarError(e, user.displayName)}
+                          />
                           <div className="flex-1">
                             <p className="text-sm font-semibold">{user.displayName}</p>
                             <p className="text-xs text-gray-500">@{user.email?.split('@')[0]}</p>
@@ -952,9 +977,14 @@ export default function DashboardPage() {
                         <div key={comment.id}>
                           {/* Main Comment */}
                           <div className="flex gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-                              {getUserInitial(comment.userDisplayName)}
-                            </div>
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${comment.userId}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                              alt={comment.userDisplayName}
+                              className="w-8 h-8 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                              onError={(e) => {
+                                e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%236366f1' width='32' height='32'/%3E%3Ctext x='50%25' y='50%25' font-size='16' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${comment.userDisplayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
+                              }}
+                            />
                             <div className="flex-1">
                               <div className="bg-white/5 rounded-2xl px-4 py-2">
                                 <p className="font-semibold text-sm">{getUserName(comment.userDisplayName)}</p>
@@ -1009,9 +1039,14 @@ export default function DashboardPage() {
                           {/* Reply Input */}
                           {replyingTo[post.id] === comment.id && (
                             <div className="ml-11 mt-2 flex items-center gap-2 bg-white/5 rounded-lg p-2">
-                              <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                {getUserInitial(user?.displayName)}
-                              </div>
+                              <img
+                                src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                                alt={user?.displayName}
+                                className="w-6 h-6 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                                onError={(e) => {
+                                  e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='%236366f1' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' font-size='12' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${user?.displayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
+                                }}
+                              />
                               <input
                                 type="text"
                                 placeholder={`Trả lời ${getUserName(comment.userDisplayName)}...`}
@@ -1044,9 +1079,12 @@ export default function DashboardPage() {
                                 if (!reply || !reply.id) return null;
                                 return (
                                 <div key={reply.id} className="flex gap-2">
-                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                    {getUserInitial(reply.userDisplayName)}
-                                  </div>
+                                  <img
+                                    src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${reply.userId}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                                    alt={reply.userDisplayName}
+                                    className="w-6 h-6 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                                    onError={(e) => handleAvatarError(e, reply.userDisplayName)}
+                                  />
                                   <div className="flex-1">
                                     <div className="bg-white/5 rounded-xl px-3 py-1.5">
                                       <p className="font-semibold text-xs">{getUserName(reply.userDisplayName)}</p>

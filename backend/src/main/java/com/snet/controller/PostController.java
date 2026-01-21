@@ -66,6 +66,23 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/user/{userId}/liked")
+    @Operation(summary = "Get posts liked by user")
+    public ResponseEntity<Page<PostDTO>> getUserLikedPosts(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+        
+        User currentUser = null;
+        if (authentication != null) {
+            currentUser = userService.getCurrentUser(authentication.getName());
+        }
+        
+        Page<PostDTO> posts = postService.getUserLikedPosts(userId, page, size, currentUser);
+        return ResponseEntity.ok(posts);
+    }
+
     @GetMapping("/{postId}")
     @Operation(summary = "Get single post")
     public ResponseEntity<PostDTO> getPost(
@@ -167,9 +184,12 @@ public class PostController {
     public ResponseEntity<Page<UserResponse>> getPostLikes(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
         
-        Page<UserResponse> likes = postService.getPostLikes(postId, page, size);
+        User currentUser = authentication != null ? 
+            userService.getCurrentUser(authentication.getName()) : null;
+        Page<UserResponse> likes = postService.getPostLikes(postId, page, size, currentUser);
         return ResponseEntity.ok(likes);
     }
 

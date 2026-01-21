@@ -38,6 +38,12 @@ public class UserController {
     public ResponseEntity<UserResponse> getUserProfile(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserProfile(userId));
     }
+
+    @GetMapping("/{userId}/status")
+    @Operation(summary = "Get user status", description = "Get user online status and last seen time")
+    public ResponseEntity<?> getUserStatus(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserStatusById(userId));
+    }
     
     @PutMapping("/profile")
     public ResponseEntity<UserResponse> updateProfile(
@@ -105,9 +111,11 @@ public class UserController {
     }
     
     @GetMapping("/{userId}/cover")
-    public ResponseEntity<byte[]> getUserCoverPhoto(@PathVariable Long userId) {
-        System.out.println("📸 Request for cover photo of user: " + userId);
-        byte[] coverPhoto = userService.getUserCoverPhoto(userId);
+    public ResponseEntity<byte[]> getUserCoverPhoto(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "medium") String size) {
+        System.out.println("📸 Request for cover photo of user: " + userId + " with size: " + size);
+        byte[] coverPhoto = userService.getUserCoverPhoto(userId, size);
         if (coverPhoto == null || coverPhoto.length == 0) {
             System.out.println("⚠️ No cover photo found for user: " + userId);
             return ResponseEntity.notFound().build();
@@ -115,9 +123,7 @@ public class UserController {
         System.out.println("✅ Returning cover photo: " + coverPhoto.length + " bytes");
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                .header("Pragma", "no-cache")
-                .header("Expires", "0")
+                .header("Cache-Control", "public, max-age=3600")
                 .body(coverPhoto);
     }
     

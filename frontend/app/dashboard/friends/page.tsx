@@ -7,7 +7,7 @@ import {
   FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
   FiMenu, FiLogOut, FiSettings, FiUser, FiUserPlus, FiUserCheck, FiUserX
 } from 'react-icons/fi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
 
 interface User {
@@ -33,6 +33,7 @@ export default function FriendsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'search'>('friends');
+  const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000);
 
   useEffect(() => {
     // Chờ auth loading xong
@@ -116,19 +117,18 @@ export default function FriendsPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleAvatarError = (e: any, displayName?: string) => {
+    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect fill='%236366f1' width='48' height='48'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${displayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
   };
 
   const getUserInitial = (name: string) => {
     return name?.charAt(0).toUpperCase() || '?';
   };
 
-  if (loading) {
+  if (loading && friends.length === 0 && pendingRequests.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Đang tải...</div>
+        <div className="inline-block w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -182,9 +182,16 @@ export default function FriendsPage() {
             <div className="relative user-menu-container">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm md:text-base"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base overflow-hidden"
               >
-                {user?.displayName?.charAt(0).toUpperCase()}
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                  alt={user?.displayName}
+                  className="w-full h-full object-cover bg-gray-700"
+                  onError={(e) => {
+                    e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect fill='%236366f1' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${user?.displayName?.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                  }}
+                />
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-xl border border-gray-700 py-2">
@@ -283,11 +290,21 @@ export default function FriendsPage() {
                     className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
-                        {getUserInitial(friend.displayName)}
-                      </div>
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${friend.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                        alt={friend.displayName}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity object-cover bg-gray-700"
+                        onClick={() => router.push(`/dashboard/profile?userId=${friend.id}`)}
+                        onError={(e) => handleAvatarError(e, friend.displayName)}
+                        style={{color: "transparent"}}
+                      />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm md:text-base truncate">{friend.displayName}</h3>
+                        <h3 
+                          className="font-semibold text-sm md:text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
+                          onClick={() => router.push(`/dashboard/profile?userId=${friend.id}`)}
+                        >
+                          {friend.displayName}
+                        </h3>
                         <p className="text-xs md:text-sm text-gray-400 truncate">{friend.email}</p>
                       </div>
                       <button
@@ -318,11 +335,20 @@ export default function FriendsPage() {
                     className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
-                        {getUserInitial(request.userDisplayName)}
-                      </div>
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${request.userId}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                        alt={request.userDisplayName}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity object-cover bg-gray-700"
+                        onClick={() => router.push(`/dashboard/profile?userId=${request.userId}`)}
+                        onError={(e) => handleAvatarError(e, request.userDisplayName)}
+                      />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm md:text-base truncate">{request.userDisplayName}</h3>
+                        <h3 
+                          className="font-semibold text-sm md:text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
+                          onClick={() => router.push(`/dashboard/profile?userId=${request.userId}`)}
+                        >
+                          {request.userDisplayName}
+                        </h3>
                         <p className="text-xs md:text-sm text-gray-400 truncate">{request.userEmail}</p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
@@ -380,11 +406,21 @@ export default function FriendsPage() {
                     className="bg-white/5 rounded-xl p-3 md:p-4 hover:bg-white/10 transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-orange-500 to-pink-600 rounded-full flex items-center justify-center font-bold text-base md:text-lg flex-shrink-0">
-                        {getUserInitial(user.displayName)}
-                      </div>
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                        alt={user.displayName}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity object-cover bg-gray-700"
+                        onClick={() => router.push(`/dashboard/profile?userId=${user.id}`)}
+                        onError={(e) => handleAvatarError(e, user.displayName)}
+                        style={{color: "transparent"}}
+                      />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm md:text-base truncate">{user.displayName}</h3>
+                        <h3 
+                          className="font-semibold text-sm md:text-base truncate cursor-pointer hover:text-primary-400 transition-colors"
+                          onClick={() => router.push(`/dashboard/profile?userId=${user.id}`)}
+                        >
+                          {user.displayName}
+                        </h3>
                         <p className="text-xs md:text-sm text-gray-400 truncate">{user.email}</p>
                       </div>
                       <button

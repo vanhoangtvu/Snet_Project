@@ -21,10 +21,28 @@ export default function ProfilePage() {
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [posts, setPosts] = useState<any[]>([]);
+  const [likedPosts, setLikedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'media' | 'likes'>('posts');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
+  const [profileUser, setProfileUser] = useState<any>(null);
+  const [viewingUserId, setViewingUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Lấy userId từ URL query params mỗi khi component mount hoặc URL thay đổi
+    const params = new URLSearchParams(window.location.search);
+    const userIdParam = params.get('userId');
+    
+    if (userIdParam) {
+      const parsedId = parseInt(userIdParam);
+      console.log('📍 URL userId param:', parsedId);
+      setViewingUserId(parsedId);
+    } else {
+      console.log('📍 No userId param, viewing own profile');
+      setViewingUserId(null);
+    }
+  }, [router.asPath]); // Trigger khi URL thay đổi
 
   useEffect(() => {
     // Chờ auth loading xong trước
@@ -37,7 +55,7 @@ export default function ProfilePage() {
       return;
     }
     
-    loadUserPosts();
+    loadProfileData();
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -47,21 +65,54 @@ export default function ProfilePage() {
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [user, router, authLoading]);
+  }, [user, router, authLoading, viewingUserId]);
 
-  const loadUserPosts = async () => {
+  const loadProfileData = async () => {
     try {
       setLoading(true);
-      if (user?.id) {
-        const response = await apiService.getUserPosts(user.id, 0, 20);
-        setPosts(response.content || []);
+      
+      // Xác định user ID cần load
+      const targetUserId = viewingUserId || user?.id;
+      
+      console.log('🔍 Profile Debug:', {
+        viewingUserId,
+        currentUserId: user?.id,
+        targetUserId,
+        isOwnProfile: !viewingUserId || (user?.id && viewingUserId === user.id)
+      });
+      
+      if (!targetUserId) return;
+      
+      // Nếu xem profile của người khác, load từ API
+      if (viewingUserId && viewingUserId !== user?.id) {
+        console.log('👤 Loading other user profile:', viewingUserId);
+        const userProfile = await apiService.getUserById(viewingUserId);
+        setProfileUser(userProfile);
+      } else {
+        // Xem profile của chính mình, dùng user từ context
+        console.log('👤 Viewing own profile');
+        setProfileUser(null);
       }
+      
+      // Load posts
+      const postsResponse = await apiService.getUserPosts(targetUserId, 0, 20);
+      setPosts(postsResponse.content || []);
+      
+      // Load liked posts
+      const likedResponse = await apiService.getUserLikedPosts(targetUserId, 0, 20);
+      setLikedPosts(likedResponse.content || []);
     } catch (error) {
-      console.error('Failed to load posts:', error);
+      console.error('Failed to load profile:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // displayUser: Nếu đang xem người khác thì dùng profileUser, không thì dùng user hiện tại
+  const displayUser = profileUser || user;
+  
+  // isOwnProfile: TRUE nếu không có viewingUserId HOẶC viewingUserId === user.id
+  const isOwnProfile = !viewingUserId || (user?.id && viewingUserId === user.id);
 
   const handleLogout = () => {
     logout();
@@ -175,10 +226,17 @@ export default function ProfilePage() {
         {/* Cover & Avatar */}
         <div className="relative">
           {/* Cover Photo */}
-          <div className="h-48 md:h-64 bg-gradient-to-r from-primary-500 to-purple-600 relative overflow-hidden">
+          <div 
+            className="h-48 md:h-64 bg-gradient-to-r from-primary-500 to-purple-600 relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => {
+              if (user?.id) {
+                window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/cover?size=full&t=${Date.now()}`, '_blank');
+              }
+            }}
+          >
             {user?.id && (
               <img 
-                src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/cover?t=${Date.now()}`}
+                src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${displayUser?.id}/cover?size=medium&t=${Date.now()}`}
                 alt="Cover"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -192,53 +250,62 @@ export default function ProfilePage() {
             <div className="flex justify-between items-start -mt-16 md:-mt-20 mb-4">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full border-4 border-black flex items-center justify-center font-bold text-3xl md:text-4xl overflow-hidden relative">
-                  {user?.id && (
+                <div 
+                  className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full border-4 border-black flex items-center justify-center font-bold text-3xl md:text-4xl overflow-hidden relative cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => {
+                    if (displayUser?.id) {
+                      window.open(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${displayUser.id}/avatar?size=full&t=${Date.now()}`, '_blank');
+                    }
+                  }}
+                >
+                  {displayUser?.id && (
                     <img 
-                      src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user.id}/avatar?t=${Date.now()}`}
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${displayUser.id}/avatar?size=medium&t=${Date.now()}`}
                       alt="Avatar"
-                      className="w-full h-full object-cover absolute inset-0"
+                      className="w-full h-full object-cover absolute inset-0 z-20"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
                     />
                   )}
                   <span className="relative z-10">
-                    {getUserInitial(user?.displayName || '')}
+                    {getUserInitial(displayUser?.displayName || '')}
                   </span>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowEditModal(true)}
-                className="mt-16 md:mt-20 px-4 py-2 border border-gray-700 rounded-full font-semibold hover:bg-white/5 transition-colors flex items-center gap-2"
-              >
+              {isOwnProfile && (
+                <button 
+                  onClick={() => setShowEditModal(true)}
+                  className="mt-16 md:mt-20 px-4 py-2 border border-gray-700 rounded-full font-semibold hover:bg-white/5 transition-colors flex items-center gap-2"
+                >
                 <FiEdit2 className="w-4 h-4" />
                 Chỉnh sửa
               </button>
+              )}
             </div>
 
             <div className="mb-4">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold">{user?.displayName}</h1>
-                {user?.verified && <VerifiedIcon className="text-blue-400" size={20} />}
+                <h1 className="text-xl md:text-2xl font-bold">{displayUser?.displayName}</h1>
+                {displayUser?.verified && <VerifiedIcon className="text-blue-400" size={20} />}
               </div>
-              <p className="text-gray-400">@{user?.email?.split('@')[0]}</p>
+              <p className="text-gray-400">@{displayUser?.email?.split('@')[0]}</p>
             </div>
 
-            {user?.bio && (
+            {displayUser?.bio && (
               <p className="text-sm md:text-base mb-3 text-gray-300">
                 {user.bio}
               </p>
             )}
 
             <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4">
-              {user?.location && (
+              {displayUser?.location && (
                 <div className="flex items-center gap-1">
                   <FiMapPin className="w-4 h-4" />
                   {user.location}
                 </div>
               )}
-              {user?.website && (
+              {displayUser?.website && (
                 <div className="flex items-center gap-1">
                   <FiLink className="w-4 h-4" />
                   <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
@@ -246,13 +313,13 @@ export default function ProfilePage() {
                   </a>
                 </div>
               )}
-              {user?.currentJob && (
+              {displayUser?.currentJob && (
                 <div className="flex items-center gap-1">
                   <FiBriefcase className="w-4 h-4" />
                   {user.currentJob}
                 </div>
               )}
-              {user?.company && (
+              {displayUser?.company && (
                 <div className="flex items-center gap-1">
                   <FiBuilding className="w-4 h-4" />
                   {user.company}
@@ -260,32 +327,32 @@ export default function ProfilePage() {
               )}
               <div className="flex items-center gap-1">
                 <FiCalendar className="w-4 h-4" />
-                Tham gia {formatDate(user?.createdAt || new Date().toISOString())}
+                Tham gia {formatDate(displayUser?.createdAt || new Date().toISOString())}
               </div>
             </div>
 
             {/* Social Links */}
-            {(user?.facebookUrl || user?.instagramUrl || user?.twitterUrl || user?.linkedinUrl) && (
+            {(displayUser?.facebookUrl || displayUser?.instagramUrl || displayUser?.twitterUrl || displayUser?.linkedinUrl) && (
               <div className="flex gap-3 mb-4">
-                {user?.facebookUrl && (
+                {displayUser?.facebookUrl && (
                   <a href={user.facebookUrl} target="_blank" rel="noopener noreferrer" 
                     className="text-blue-500 hover:text-blue-400 transition-colors">
                     <FiFacebook className="w-5 h-5" />
                   </a>
                 )}
-                {user?.instagramUrl && (
+                {displayUser?.instagramUrl && (
                   <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer"
                     className="text-pink-500 hover:text-pink-400 transition-colors">
                     <FiInstagram className="w-5 h-5" />
                   </a>
                 )}
-                {user?.twitterUrl && (
+                {displayUser?.twitterUrl && (
                   <a href={user.twitterUrl} target="_blank" rel="noopener noreferrer"
                     className="text-sky-500 hover:text-sky-400 transition-colors">
                     <FiTwitter className="w-5 h-5" />
                   </a>
                 )}
-                {user?.linkedinUrl && (
+                {displayUser?.linkedinUrl && (
                   <a href={user.linkedinUrl} target="_blank" rel="noopener noreferrer"
                     className="text-blue-700 hover:text-blue-600 transition-colors">
                     <FiLinkedin className="w-5 h-5" />
@@ -297,12 +364,12 @@ export default function ProfilePage() {
             {/* Storage Info */}
             <div className="bg-white/5 rounded-lg p-3 mb-4">
               <div className="text-sm text-gray-400 mb-2">
-                Dung lượng: {(user?.storageUsed / 1024 / 1024 / 1024).toFixed(2)}GB / {(user?.storageQuota / 1024 / 1024 / 1024).toFixed(2)}GB
+                Dung lượng: {(displayUser?.storageUsed / 1024 / 1024 / 1024).toFixed(2)}GB / {(displayUser?.storageQuota / 1024 / 1024 / 1024).toFixed(2)}GB
               </div>
               <div className="w-full bg-gray-700 rounded-full h-2">
                 <div 
                   className="bg-primary-500 h-2 rounded-full transition-all"
-                  style={{ width: `${(user?.storageUsed / user?.storageQuota) * 100}%` }}
+                  style={{ width: `${(displayUser?.storageUsed / displayUser?.storageQuota) * 100}%` }}
                 ></div>
               </div>
             </div>
@@ -361,12 +428,12 @@ export default function ProfilePage() {
                   <div key={post.id} className="border-b border-gray-800 p-4 hover:bg-white/5 transition-colors">
                     <div className="flex gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                        {getUserInitial(user?.displayName || '')}
+                        {getUserInitial(displayUser?.displayName || '')}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold">{user?.displayName}</span>
-                          <span className="text-gray-400 text-sm">@{user?.email?.split('@')[0]}</span>
+                          <span className="font-bold">{displayUser?.displayName}</span>
+                          <span className="text-gray-400 text-sm">@{displayUser?.email?.split('@')[0]}</span>
                         </div>
                         <p className="text-sm md:text-base mb-2">{post.content}</p>
                         <div className="flex gap-6 text-gray-400 text-sm">
@@ -445,12 +512,12 @@ export default function ProfilePage() {
 
           {activeTab === 'likes' && (
             <div>
-              {posts.filter(p => p.likedByCurrentUser).length === 0 ? (
+              {likedPosts.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <p>Chưa có bài viết nào được thích</p>
                 </div>
               ) : (
-                posts.filter(p => p.likedByCurrentUser).map((post) => (
+                likedPosts.map((post) => (
                   <div key={post.id} className="border-b border-gray-800 p-4 hover:bg-white/5 transition-colors">
                     <div className="flex gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
@@ -463,19 +530,42 @@ export default function ProfilePage() {
                           {post.userVerified && <VerifiedIcon className="text-blue-400" size={16} />}
                         </div>
                         <p className="text-sm md:text-base mb-2">{post.content}</p>
-                        {post.fileUrl && (
+                        
+                        {/* Image */}
+                        {post.fileUrl && post.fileType?.startsWith('image/') && (
                           <img 
                             src={`${process.env.NEXT_PUBLIC_API_URL}/api/files/${post.fileId}/thumbnail`}
                             alt="Post"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = `${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`;
                             }}
-                            className="w-full max-h-96 object-cover rounded-lg mb-2 cursor-pointer hover:opacity-100 brightness-110 contrast-110"
+                            className="w-full max-h-96 object-cover rounded-lg mb-2 cursor-pointer hover:opacity-90 brightness-110 contrast-110"
                             style={{ filter: 'brightness(1.1) contrast(1.1)', imageOrientation: 'auto' }}
                             onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
                             loading="lazy"
                           />
                         )}
+                        
+                        {/* Video file */}
+                        {post.fileUrl && post.fileType?.startsWith('video/') && (
+                          <video 
+                            src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                            controls
+                            className="w-full max-h-96 rounded-lg mb-2"
+                          />
+                        )}
+                        
+                        {/* Video embed (YouTube, etc.) */}
+                        {post.videoUrl && !post.fileUrl && (
+                          <div className="mb-2">
+                            <VideoEmbed 
+                              url={post.videoUrl} 
+                              platform={post.videoPlatform}
+                              className="rounded-lg"
+                            />
+                          </div>
+                        )}
+                        
                         <div className="flex gap-6 text-gray-400 text-sm">
                           <button className="hover:text-primary-500 transition-colors">
                             <FiMessageCircle className="w-4 h-4" /> {post.commentCount}

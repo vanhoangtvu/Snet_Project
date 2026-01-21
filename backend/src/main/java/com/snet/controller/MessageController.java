@@ -23,6 +23,16 @@ public class MessageController {
     private final MessageService messageService;
     private final UserService userService;
     
+    @PostMapping("/api/messages/send")
+    @ResponseBody
+    public ResponseEntity<MessageResponse> sendMessageRest(
+            Authentication authentication,
+            @RequestBody MessageRequest request) {
+        String senderEmail = authentication.getName();
+        MessageResponse response = messageService.sendMessage(senderEmail, request);
+        return ResponseEntity.ok(response);
+    }
+    
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload MessageRequest request, Principal principal) {
         if (principal == null) {

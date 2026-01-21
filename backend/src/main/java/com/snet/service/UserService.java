@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,12 +83,31 @@ public class UserService {
         }
         
         if (avatar != null && !avatar.isEmpty()) {
-            user.setAvatar(avatar.getBytes());
-            System.out.println("✅ Updated avatar: " + avatar.getSize() + " bytes");
+            // Rotate avatar based on EXIF before saving
+            byte[] avatarBytes = avatar.getBytes();
+            if (fileService != null) {
+                try {
+                    avatarBytes = fileService.rotateImageByExif(avatarBytes);
+                    System.out.println("✅ Avatar rotated by EXIF");
+                } catch (Exception e) {
+                    System.err.println("⚠️ Failed to rotate avatar, using original: " + e.getMessage());
+                }
+            }
+            user.setAvatar(avatarBytes);
+            System.out.println("✅ Updated avatar: " + avatarBytes.length + " bytes");
         }
         
         if (coverPhoto != null && !coverPhoto.isEmpty()) {
             byte[] coverBytes = coverPhoto.getBytes();
+            // Rotate cover photo based on EXIF before saving
+            if (fileService != null) {
+                try {
+                    coverBytes = fileService.rotateImageByExif(coverBytes);
+                    System.out.println("✅ Cover photo rotated by EXIF");
+                } catch (Exception e) {
+                    System.err.println("⚠️ Failed to rotate cover photo, using original: " + e.getMessage());
+                }
+            }
             user.setCoverPhoto(coverBytes);
             System.out.println("✅ Updated cover photo: " + coverBytes.length + " bytes");
         } else {
@@ -130,16 +150,34 @@ public class UserService {
         return convertToResponse(savedUser);
     }
     
-    public byte[] getUserCoverPhoto(Long userId) {
-        System.out.println("🔍 Fetching cover photo for user ID: " + userId);
+    public byte[] getUserCoverPhoto(Long userId, String size) {
+        System.out.println("🔍 Fetching cover photo for user ID: " + userId + " with size: " + size);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         byte[] coverPhoto = user.getCoverPhoto();
         
-        if (coverPhoto != null) {
-            System.out.println("✅ Cover photo found: " + coverPhoto.length + " bytes");
-        } else {
+        if (coverPhoto == null) {
             System.out.println("⚠️ No cover photo found in database for user: " + userId);
+            return null;
+        }
+        
+        System.out.println("✅ Cover photo found: " + coverPhoto.length + " bytes");
+        
+        // Return original for full size
+        if ("full".equals(size)) {
+            return coverPhoto;
+        }
+        
+        // Resize cover photo for medium/small
+        if (fileService != null) {
+            try {
+                byte[] resized = fileService.resizeImage(coverPhoto, size);
+                System.out.println("✅ Resized cover from " + coverPhoto.length + " to " + resized.length + " bytes");
+                return resized;
+            } catch (Exception e) {
+                System.err.println("❌ Error resizing cover: " + e.getMessage());
+                return coverPhoto; // Fallback to original
+            }
         }
         
         return coverPhoto;
@@ -166,9 +204,34 @@ public class UserService {
         User user = getCurrentUser(email);
         user.setOnline(online);
         if (!online) {
-            user.setLastSeen(LocalDateTime.now());
+            LocalDateTime now = LocalDateTime.now();
+            user.setLastSeen(now);
+            System.out.println("🔴 User " + email + " set offline at " + now);
+        } else {
+            System.out.println("🟢 User " + email + " set online");
         }
         userRepository.save(user);
+    }
+
+    public Map<String, Object> getUserStatus(String email) {
+        User user = getCurrentUser(email);
+        return Map.of(
+            "userId", user.getId(),
+            "email", user.getEmail(),
+            "online", user.isOnline(),
+            "lastSeen", user.getLastSeen()
+        );
+    }
+
+    public Map<String, Object> getUserStatusById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return Map.of(
+            "userId", user.getId(),
+            "email", user.getEmail(),
+            "online", user.isOnline(),
+            "lastSeen", user.getLastSeen()
+        );
     }
     
     public byte[] getUserAvatar(Long userId, String size) {

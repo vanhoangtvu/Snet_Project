@@ -60,8 +60,20 @@ public class WebSocketEventListener {
             
             // Broadcast online users list
             broadcastOnlineUsers();
+            
+            // Broadcast user status update
+            broadcastUserStatus(userEmail);
         } else {
             log.warn("⚠️ WebSocket disconnected but user is null");
+        }
+    }
+    
+    private void broadcastUserStatus(String userEmail) {
+        try {
+            var userStatus = userService.getUserStatus(userEmail);
+            messagingTemplate.convertAndSend("/topic/user-status", userStatus);
+        } catch (Exception e) {
+            log.error("Error broadcasting user status", e);
         }
     }
     

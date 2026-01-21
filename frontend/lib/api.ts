@@ -167,6 +167,11 @@ class ApiService {
     return response.data;
   }
 
+  async sendMessage(data: { receiverId: number; content: string; type: string }) {
+    const response = await this.api.post('/messages/send', data);
+    return response.data;
+  }
+
   async markAsRead(messageId: number) {
     const response = await this.api.post(`/messages/${messageId}/read`);
     return response.data;
@@ -398,6 +403,11 @@ class ApiService {
 
   async getUserPosts(userId: number, page = 0, size = 10) {
     const response = await this.api.get(`/posts/user/${userId}?page=${page}&size=${size}`);
+    return response.data;
+  }
+
+  async getUserLikedPosts(userId: number, page = 0, size = 10) {
+    const response = await this.api.get(`/posts/user/${userId}/liked?page=${page}&size=${size}`);
     return response.data;
   }
 

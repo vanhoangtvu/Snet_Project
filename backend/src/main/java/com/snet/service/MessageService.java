@@ -219,6 +219,8 @@ public class MessageService {
                 .id(message.getId())
                 .senderId(message.getSender().getId())
                 .senderName(message.getSender().getDisplayName())
+                .senderOnline(message.getSender().isOnline())
+                .senderLastSeen(message.getSender().getLastSeen())
                 .content(message.getContent())
                 .type(message.getType().name())
                 .status(message.getStatus().name())
@@ -228,7 +230,9 @@ public class MessageService {
         // Set receiver for direct messages
         if (message.getReceiver() != null) {
             builder.receiverId(message.getReceiver().getId())
-                   .receiverName(message.getReceiver().getDisplayName());
+                   .receiverName(message.getReceiver().getDisplayName())
+                   .receiverOnline(message.getReceiver().isOnline())
+                   .receiverLastSeen(message.getReceiver().getLastSeen());
         }
         
         // Set group for group messages

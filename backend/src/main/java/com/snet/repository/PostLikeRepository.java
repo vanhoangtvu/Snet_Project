@@ -22,6 +22,9 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     // Lấy danh sách like theo thời gian
     Page<PostLike> findByPostOrderByCreatedAtDesc(Post post, Pageable pageable);
     
+    // Lấy danh sách posts mà user đã like
+    Page<PostLike> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    
     // Đếm số like của bài đăng
     long countByPost(Post post);
     

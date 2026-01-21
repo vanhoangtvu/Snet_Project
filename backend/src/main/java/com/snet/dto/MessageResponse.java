@@ -15,8 +15,12 @@ public class MessageResponse {
     private Long id;
     private Long senderId;
     private String senderName;
+    private Boolean senderOnline;
+    private LocalDateTime senderLastSeen;
     private Long receiverId;
     private String receiverName;
+    private Boolean receiverOnline;
+    private LocalDateTime receiverLastSeen;
     private Long groupId;
     private String groupName;
     private String content;
