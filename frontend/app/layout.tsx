@@ -6,10 +6,10 @@ import { AuthProvider } from '@/contexts/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Snet - Social Network & File Sharing',
-  description: 'Modern social network platform with powerful file sharing capabilities',
+  title: 'SNET - Social Network',
+  description: 'Mạng xã hội hiện đại với tính năng chia sẻ, kết nối bạn bè',
   themeColor: '#1d9bf0',
-  applicationName: 'Snet',
+  applicationName: 'SNET',
 };
 
 export const viewport: Viewport = {

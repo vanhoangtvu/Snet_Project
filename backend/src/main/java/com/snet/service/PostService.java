@@ -475,5 +475,15 @@ public class PostService {
             return true;
         }
     }
+
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+            .orElseThrow(() -> new RuntimeException("Post not found"));
+    }
+
+    public PostComment getCommentById(Long commentId) {
+        return postCommentRepository.findById(commentId)
+            .orElseThrow(() -> new RuntimeException("Comment not found"));
+    }
 }
 

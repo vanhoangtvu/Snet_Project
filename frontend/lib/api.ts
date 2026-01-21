@@ -146,6 +146,19 @@ class ApiService {
     return response.data;
   }
 
+  async getNotifications() {
+    const response = await this.api.get('/notifications');
+    return response.data;
+  }
+
+  async markNotificationAsRead(id: number) {
+    await this.api.put(`/notifications/${id}/read`);
+  }
+
+  async markAllNotificationsAsRead() {
+    await this.api.put('/notifications/read-all');
+  }
+
   async getPendingRequests() {
     const response = await this.api.get('/friends/requests/pending');
     return response.data;

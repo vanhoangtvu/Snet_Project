@@ -82,7 +82,7 @@ file:
 
 # CORS Configuration
 cors:
-  allowed-origins: http://localhost:3006,http://123.28.149.142:3006,http://123.28.149.142:8086
+  allowed-origins: http://localhost:3006,https://snet.io.vn,https://api.snet.io.vn
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: "*"
   allow-credentials: true

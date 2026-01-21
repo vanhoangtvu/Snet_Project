@@ -9,10 +9,11 @@ import {
   FiMenu, FiLogOut, FiSettings, FiUser, FiImage, FiVideo,
   FiSmile, FiMoreHorizontal, FiThumbsUp, FiMessageCircle, FiShare2,
   FiEdit2, FiTrash2, FiEyeOff, FiBookmark, FiFlag, FiX, FiCheck,
-  FiGlobe, FiLock, FiUserCheck
+  FiGlobe, FiLock, FiUserCheck, FiHeart, FiUserPlus
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
+import MentionInput from '@/components/MentionInput';
 
 interface Post {
   id: number;
@@ -55,6 +56,7 @@ export default function DashboardPage() {
   const [showPostMenu, setShowPostMenu] = useState<{ [key: number]: boolean }>({});
   const [editingPost, setEditingPost] = useState<number | null>(null);
   const [editContent, setEditContent] = useState<string>('');
+  const [editPrivacy, setEditPrivacy] = useState<string>('PUBLIC');
   const [replyingTo, setReplyingTo] = useState<{ [key: number]: number | null }>({});
   const [replyContent, setReplyContent] = useState<{ [key: number]: string }>({});
   const [likedComments, setLikedComments] = useState<Set<number>>(() => {
@@ -66,7 +68,10 @@ export default function DashboardPage() {
     return new Set();
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [friendsList, setFriendsList] = useState<any[]>([]);
   const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000); // Cache for 1 minute
 
   useEffect(() => {
@@ -83,6 +88,24 @@ export default function DashboardPage() {
     loadPosts();
     loadFriends();
   }, [authLoading, user, router]); // Run when auth is ready
+
+  const loadFriends = async () => {
+    try {
+      const data = await apiService.getFriendsList();
+      setFriendsList(data);
+    } catch (error) {
+      console.error('Failed to load friends:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const data = await apiService.getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
 
   useEffect(() => {
     // Simple scroll listener for lazy loading (like Facebook)
@@ -175,15 +198,6 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
       setLoadingMore(false);
-    }
-  };
-
-  const loadFriends = async () => {
-    try {
-      const data = await apiService.getFriendsList();
-      setFriends(data.slice(0, 5)); // Top 5 friends
-    } catch (error) {
-      console.error('Failed to load friends:', error);
     }
   };
 
@@ -330,6 +344,7 @@ export default function DashboardPage() {
   const handleEditPost = (post: Post) => {
     setEditingPost(post.id);
     setEditContent(post.content);
+    setEditPrivacy(post.privacy || 'PUBLIC');
     setShowPostMenu({});
   };
 
@@ -337,13 +352,14 @@ export default function DashboardPage() {
     if (!editContent.trim()) return;
 
     try {
-      await apiService.updatePost(postId, { content: editContent });
+      await apiService.updatePost(postId, { content: editContent, privacy: editPrivacy });
       // Update post locally
       setPosts(posts.map(p => 
-        p.id === postId ? { ...p, content: editContent } : p
+        p.id === postId ? { ...p, content: editContent, privacy: editPrivacy } : p
       ));
       setEditingPost(null);
       setEditContent('');
+      setEditPrivacy('PUBLIC');
     } catch (error) {
       console.error('Failed to update post:', error);
     }
@@ -352,6 +368,7 @@ export default function DashboardPage() {
   const handleCancelEdit = () => {
     setEditingPost(null);
     setEditContent('');
+    setEditPrivacy('PUBLIC');
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -375,7 +392,14 @@ export default function DashboardPage() {
   };
 
   const handleReplyComment = (postId: number, commentId: number) => {
-    setReplyingTo({ ...replyingTo, [postId]: commentId });
+    // Toggle: nếu đang reply comment này thì đóng, nếu không thì mở
+    if (replyingTo[postId] === commentId) {
+      setReplyingTo({ ...replyingTo, [postId]: null });
+      setReplyContent({ ...replyContent, [postId]: '' });
+    } else {
+      setReplyingTo({ ...replyingTo, [postId]: commentId });
+      setReplyContent({ ...replyContent, [postId]: '' }); // Clear content khi chuyển sang comment khác
+    }
   };
 
   const handleCancelReply = (postId: number) => {
@@ -529,8 +553,15 @@ export default function DashboardPage() {
 
           {/* Right */}
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications) loadNotifications();
+              }}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors relative"
+            >
               <FiBell className="w-6 h-6" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
             <div className="relative user-menu-container">
               <button 
@@ -591,6 +622,46 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Notifications Popup */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowNotifications(false)}></div>
+          <div className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Thông báo</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-white/5 rounded-full">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(80vh-60px)]">
+              {notifications.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <FiBell className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              ) : (
+                notifications.map((notif: any) => (
+                  <div key={notif.id} className={`p-4 hover:bg-white/5 cursor-pointer border-b border-gray-700 ${!notif.isRead ? 'bg-primary-500/10' : ''}`}>
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        {notif.type === 'POST_LIKE' && <FiHeart className="w-5 h-5 text-red-500" />}
+                        {(notif.type === 'POST_COMMENT' || notif.type === 'COMMENT_REPLY') && <FiMessageCircle className="w-5 h-5 text-blue-500" />}
+                        {(notif.type === 'FRIEND_REQUEST' || notif.type === 'FRIEND_ACCEPT') && <FiUserPlus className="w-5 h-5 text-green-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm"><span className="font-semibold">{notif.actorName}</span> <span className="text-gray-400">{notif.content}</span></p>
+                        <p className="text-xs text-primary-400 mt-1">{new Date(notif.createdAt).toLocaleString('vi-VN')}</p>
+                      </div>
+                      {!notif.isRead && <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -632,12 +703,12 @@ export default function DashboardPage() {
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 object-cover bg-gray-700"
                   onError={(e) => handleAvatarError(e, user?.displayName)}
                 />
-                <input
-                  type="text"
-                  placeholder={`${getUserName(user?.displayName)} ơi, bạn đang nghĩ gì?`}
+                <MentionInput
                   value={postContent}
-                  onChange={(e) => setPostContent(e.target.value)}
+                  onChange={(val) => setPostContent(val)}
                   onKeyPress={(e) => e.key === 'Enter' && !selectedFile && handleCreatePost()}
+                  placeholder={`${getUserName(user?.displayName)} ơi, bạn đang nghĩ gì?`}
+                  friends={friendsList}
                   className="flex-1 bg-white/5 border border-gray-700 rounded-full px-3 md:px-4 py-2 outline-none focus:border-primary-500 transition-colors text-sm md:text-base"
                 />
               </div>
@@ -761,7 +832,13 @@ export default function DashboardPage() {
                         <p className="font-semibold text-sm md:text-base">{getUserName(post.userDisplayName)}</p>
                         {post.userVerified && <VerifiedIcon className="text-blue-400" size={16} />}
                       </div>
-                      <p className="text-xs text-gray-400">{formatTime(post.createdAt)}</p>
+                      <div className="flex items-center gap-1 text-xs text-gray-400">
+                        <span>{formatTime(post.createdAt)}</span>
+                        <span>•</span>
+                        {post.privacy === 'PUBLIC' && <FiGlobe className="w-3 h-3" title="Công khai" />}
+                        {post.privacy === 'FRIENDS_ONLY' && <FiUserCheck className="w-3 h-3" title="Bạn bè" />}
+                        {post.privacy === 'PRIVATE' && <FiLock className="w-3 h-3" title="Riêng tư" />}
+                      </div>
                     </div>
                   </div>
                   <div className="relative post-menu-container">
@@ -828,6 +905,18 @@ export default function DashboardPage() {
                       rows={4}
                       autoFocus
                     />
+                    <div className="flex items-center gap-2">
+                      <FiLock className="w-4 h-4 text-gray-400" />
+                      <select
+                        value={editPrivacy}
+                        onChange={(e) => setEditPrivacy(e.target.value)}
+                        className="bg-white/5 border border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-primary-500 transition-colors"
+                      >
+                        <option value="PUBLIC">Công khai</option>
+                        <option value="FRIENDS">Bạn bè</option>
+                        <option value="PRIVATE">Riêng tư</option>
+                      </select>
+                    </div>
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={handleCancelEdit}
@@ -948,24 +1037,29 @@ export default function DashboardPage() {
                 {showComments[post.id] && (
                   <div className="border-t border-gray-700">
                     {/* Comment Input */}
-                    <div className="p-4 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {getUserInitial(user?.displayName)}
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Viết bình luận..."
+                    <div className="p-3 md:p-4 flex items-center gap-2 md:gap-3">
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
+                        alt={user?.displayName}
+                        className="w-7 h-7 md:w-8 md:h-8 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%236366f1' width='32' height='32'/%3E%3Ctext x='50%25' y='50%25' font-size='16' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${user?.displayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
+                        }}
+                      />
+                      <MentionInput
                         value={commentContent[post.id] || ''}
-                        onChange={(e) => setCommentContent({ ...commentContent, [post.id]: e.target.value })}
+                        onChange={(val) => setCommentContent({ ...commentContent, [post.id]: val })}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
-                        className="flex-1 bg-white/5 border border-gray-700 rounded-full px-4 py-2 text-sm outline-none focus:border-primary-500 transition-colors"
+                        placeholder="Viết bình luận..."
+                        friends={friendsList}
+                        className="flex-1 bg-white/5 border border-gray-700 rounded-full px-3 md:px-4 py-1.5 md:py-2 text-sm outline-none focus:border-primary-500 transition-colors min-w-0"
                       />
                       <button
                         onClick={() => handleAddComment(post.id)}
                         disabled={!commentContent[post.id]?.trim()}
-                        className="text-primary-500 hover:text-primary-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="text-primary-500 hover:text-primary-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                       >
-                        <FiMessageCircle className="w-6 h-6" />
+                        <FiMessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                       </button>
                     </div>
 
@@ -1038,34 +1132,34 @@ export default function DashboardPage() {
 
                           {/* Reply Input */}
                           {replyingTo[post.id] === comment.id && (
-                            <div className="ml-11 mt-2 flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                            <div className="ml-8 md:ml-11 mt-2 flex items-center gap-1.5 bg-white/5 rounded-lg p-1.5">
                               <img
                                 src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${user?.id}/avatar?size=medium&t=${avatarTimestamp.current}`}
                                 alt={user?.displayName}
-                                className="w-6 h-6 rounded-full flex-shrink-0 object-cover bg-gray-700"
+                                className="w-5 h-5 md:w-6 md:h-6 rounded-full flex-shrink-0 object-cover bg-gray-700"
                                 onError={(e) => {
                                   e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='%236366f1' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' font-size='12' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${user?.displayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
                                 }}
                               />
-                              <input
-                                type="text"
-                                placeholder={`Trả lời ${getUserName(comment.userDisplayName)}...`}
+                              <MentionInput
                                 value={replyContent[post.id] || ''}
-                                onChange={(e) => setReplyContent({ ...replyContent, [post.id]: e.target.value })}
+                                onChange={(val) => setReplyContent({ ...replyContent, [post.id]: val })}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSendReply(post.id, comment.id)}
-                                className="flex-1 bg-white/5 border border-gray-700 rounded-full px-3 py-1.5 text-xs outline-none focus:border-primary-500 transition-colors"
+                                placeholder="Trả lời..."
+                                friends={friendsList}
+                                className="flex-1 bg-white/5 border border-gray-700 rounded-full px-2 md:px-3 py-1 text-xs outline-none focus:border-primary-500 transition-colors min-w-0"
                                 autoFocus
                               />
                               <button
                                 onClick={() => handleSendReply(post.id, comment.id)}
                                 disabled={!replyContent[post.id]?.trim()}
-                                className="text-primary-500 hover:text-primary-400 disabled:opacity-30 text-xs font-semibold"
+                                className="text-primary-500 hover:text-primary-400 disabled:opacity-30 text-[10px] md:text-xs font-semibold flex-shrink-0"
                               >
                                 Gửi
                               </button>
                               <button
                                 onClick={() => handleCancelReply(post.id)}
-                                className="text-gray-400 hover:text-white text-xs font-semibold"
+                                className="text-gray-400 hover:text-white text-[10px] md:text-xs font-semibold flex-shrink-0 hidden md:inline"
                               >
                                 Hủy
                               </button>
@@ -1083,19 +1177,31 @@ export default function DashboardPage() {
                                     src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${reply.userId}/avatar?size=medium&t=${avatarTimestamp.current}`}
                                     alt={reply.userDisplayName}
                                     className="w-6 h-6 rounded-full flex-shrink-0 object-cover bg-gray-700"
-                                    onError={(e) => handleAvatarError(e, reply.userDisplayName)}
+                                    onError={(e) => {
+                                      e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='%236366f1' width='24' height='24'/%3E%3Ctext x='50%25' y='50%25' font-size='12' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${reply.userDisplayName?.charAt(0).toUpperCase() || '?'}%3C/text%3E%3C/svg%3E`;
+                                    }}
                                   />
                                   <div className="flex-1">
                                     <div className="bg-white/5 rounded-xl px-3 py-1.5">
                                       <p className="font-semibold text-xs">{getUserName(reply.userDisplayName)}</p>
                                       <p className="text-xs">{reply.content}</p>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-0.5 px-2 text-xs text-gray-400">
+                                    <div className="flex items-center gap-1 mt-0.5 px-1 text-xs text-gray-400">
                                       <span className="text-[10px]">{formatTime(reply.createdAt)}</span>
-                                      <button className="hover:text-primary-500 transition-colors font-semibold text-[10px]">
-                                        Thích
+                                      {reply.likeCount > 0 && (
+                                        <span className="text-primary-500 text-[10px]">{reply.likeCount}</span>
+                                      )}
+                                      <button 
+                                        onClick={() => handleLikeComment(post.id, reply.id)}
+                                        className={`hover:text-primary-500 transition-colors p-0.5 ${likedComments.has(reply.id) ? 'text-primary-500' : ''}`}
+                                        title="Thích"
+                                      >
+                                        <FiThumbsUp className="w-2.5 h-2.5" />
                                       </button>
-                                      <button className="hover:text-primary-500 transition-colors font-semibold text-[10px]">
+                                      <button 
+                                        onClick={() => handleReplyComment(post.id, comment.id)}
+                                        className="hover:text-primary-500 transition-colors font-semibold text-[9px]"
+                                      >
                                         Trả lời
                                       </button>
                                       {reply.userId === user?.id && (

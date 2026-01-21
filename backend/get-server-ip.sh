@@ -1,24 +1,13 @@
 #!/bin/bash
 
-# Get public IP
-PUBLIC_IP=$(curl -s https://api.ipify.org)
+# Sử dụng domain thay vì IP động
+DOMAIN="snet.io.vn"
+API_DOMAIN="api.snet.io.vn"
 
-if [ -z "$PUBLIC_IP" ]; then
-    echo "⚠️ Could not get public IP, using localhost"
-    PUBLIC_IP="localhost"
-fi
+echo "✅ Using domain: $DOMAIN"
 
-echo "✅ Server IP: $PUBLIC_IP"
+# Update application.yml với domain
+sed -i "s|url: http://.*:8086|url: https://$API_DOMAIN|g" src/main/resources/application.yml
+sed -i "s|allowed-origins: .*|allowed-origins: http://localhost:3006,https://$DOMAIN,https://$API_DOMAIN|g" src/main/resources/application.yml
 
-# Update application.yml
-sed -i "s|url: http://.*:8086|url: http://$PUBLIC_IP:8086|g" src/main/resources/application.yml
-sed -i "s|allowed-origins: .*|allowed-origins: http://localhost:3006,http://$PUBLIC_IP:3006,http://$PUBLIC_IP:8086|g" src/main/resources/application.yml
-
-# Update SecurityConfig.java
-sed -i "s|\"http://[0-9.]*:3006\"|\"http://$PUBLIC_IP:3006\"|g" src/main/java/com/snet/config/SecurityConfig.java
-sed -i "s|\"http://[0-9.]*:8086\"|\"http://$PUBLIC_IP:8086\"|g" src/main/java/com/snet/config/SecurityConfig.java
-
-# Update WebSocketConfig.java
-sed -i "s|\"http://[0-9.]*:3006\"|\"http://$PUBLIC_IP:3006\"|g" src/main/java/com/snet/config/WebSocketConfig.java
-
-echo "✅ Updated all configurations with IP: $PUBLIC_IP"
+echo "✅ Updated configurations with domain: $DOMAIN"

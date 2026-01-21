@@ -42,6 +42,11 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public User getUserByUsername(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
     
     public UserResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
@@ -232,6 +237,11 @@ public class UserService {
             "online", user.isOnline(),
             "lastSeen", user.getLastSeen()
         );
+    }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
     
     public byte[] getUserAvatar(Long userId, String size) {

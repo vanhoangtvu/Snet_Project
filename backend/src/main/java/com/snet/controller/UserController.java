@@ -1,6 +1,7 @@
 package com.snet.controller;
 
 import com.snet.dto.UserResponse;
+import com.snet.model.User;
 import com.snet.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -101,7 +102,18 @@ public class UserController {
         byte[] avatar = userService.getUserAvatar(userId, size);
         if (avatar == null || avatar.length == 0) {
             System.out.println("❌ No avatar found for user: " + userId);
-            return ResponseEntity.notFound().build();
+            // Trả về default avatar SVG thay vì 404
+            User user = userService.getUserById(userId);
+            String initial = user.getDisplayName() != null ? user.getDisplayName().substring(0, 1).toUpperCase() : "?";
+            String svg = String.format(
+                "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'>" +
+                "<rect fill='%236366f1' width='200' height='200'/>" +
+                "<text x='100' y='120' font-size='80' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>%s</text>" +
+                "</svg>", initial
+            );
+            return ResponseEntity.ok()
+                    .contentType(MediaType.valueOf("image/svg+xml"))
+                    .body(svg.getBytes());
         }
         System.out.println("✅ Avatar found and returned for user: " + userId + " - " + avatar.length + " bytes");
         return ResponseEntity.ok()

@@ -3,8 +3,10 @@ package com.snet.controller;
 import com.snet.dto.*;
 import com.snet.model.FileMetadata;
 import com.snet.model.Post;
+import com.snet.model.PostComment;
 import com.snet.model.User;
 import com.snet.service.FileService;
+import com.snet.service.NotificationService;
 import com.snet.service.PostService;
 import com.snet.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +34,9 @@ public class PostController {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @GetMapping
     @Operation(summary = "Get public posts feed")
@@ -147,6 +152,12 @@ public class PostController {
         User user = userService.getCurrentUser(authentication.getName());
         boolean liked = postService.toggleLike(postId, user);
         
+        // Tạo thông báo khi like
+        if (liked) {
+            Post post = postService.getPostById(postId);
+            notificationService.notifyPostLike(post, user);
+        }
+        
         return ResponseEntity.ok(Map.of(
             "liked", liked,
             "message", liked ? "Post liked" : "Post unliked"
@@ -162,6 +173,18 @@ public class PostController {
         
         User user = userService.getCurrentUser(authentication.getName());
         PostCommentDTO comment = postService.addComment(postId, createCommentDTO, user);
+        
+        // Tạo thông báo
+        Post post = postService.getPostById(postId);
+        if (createCommentDTO.getParentCommentId() != null) {
+            // Reply comment
+            PostComment parentComment = postService.getCommentById(createCommentDTO.getParentCommentId());
+            notificationService.notifyCommentReply(parentComment, user, createCommentDTO.getContent());
+        } else {
+            // Comment bài viết
+            notificationService.notifyPostComment(post, user, createCommentDTO.getContent());
+        }
+        
         return ResponseEntity.ok(comment);
     }
 
