@@ -10,7 +10,7 @@ class ApiService {
   constructor() {
     this.api = axios.create({
       baseURL: `${API_BASE_URL}/api`,
-      timeout: 30000, // 30 seconds timeout
+      timeout: 5000, // 5 seconds timeout
       headers: {
         'Content-Type': 'application/json',
       },
@@ -113,6 +113,7 @@ class ApiService {
   async updateProfile(data: FormData) {
     const response = await this.api.put('/users/profile', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000, // 30s cho upload file
     });
     return response.data;
   }

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { SnetLogo } from '@/components/icons/SnetIcon';
 import { 
   FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
-  FiMenu, FiLogOut, FiSettings, FiUser, FiUserPlus, FiUserCheck, FiUserX
+  FiMenu, FiLogOut, FiSettings, FiUser, FiUserPlus, FiUserCheck, FiUserX,
+  FiX, FiHeart
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
@@ -27,7 +28,18 @@ export default function FriendsPage() {
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [friends, setFriends] = useState<User[]>([]);
+
+  const loadNotifications = async () => {
+    try {
+      const data = await apiService.getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,8 +188,17 @@ export default function FriendsPage() {
           {/* Right */}
 
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications) loadNotifications();
+              }}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors relative"
+            >
               <FiBell className="w-5 h-5 md:w-6 md:h-6" />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
             </button>
             <div className="relative user-menu-container">
               <button
@@ -468,6 +489,46 @@ export default function FriendsPage() {
           </button>
         </div>
       </nav>
+
+      {/* Notification Panel */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowNotifications(false)}></div>
+          <div className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Thông báo</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-white/5 rounded-full">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(80vh-60px)]">
+              {notifications.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <FiBell className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              ) : (
+                notifications.map((notif: any) => (
+                  <div key={notif.id} className={`p-4 hover:bg-white/5 cursor-pointer border-b border-gray-700 ${!notif.isRead ? 'bg-primary-500/10' : ''}`}>
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        {notif.type === 'POST_LIKE' && <FiHeart className="w-5 h-5 text-red-500" />}
+                        {(notif.type === 'POST_COMMENT' || notif.type === 'COMMENT_REPLY') && <FiMessageCircle className="w-5 h-5 text-blue-500" />}
+                        {(notif.type === 'FRIEND_REQUEST' || notif.type === 'FRIEND_ACCEPT') && <FiUserPlus className="w-5 h-5 text-green-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm"><span className="font-semibold">{notif.actorName}</span> <span className="text-gray-400">{notif.content}</span></p>
+                        <p className="text-xs text-primary-400 mt-1">{new Date(notif.createdAt).toLocaleString('vi-VN')}</p>
+                      </div>
+                      {!notif.isRead && <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

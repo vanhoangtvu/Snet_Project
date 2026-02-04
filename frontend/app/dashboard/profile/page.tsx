@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SnetLogo } from '@/components/icons/SnetIcon';
 import { VerifiedIcon } from '@/components/icons/Icons';
 import { 
@@ -9,7 +9,8 @@ import {
   FiMenu, FiLogOut, FiSettings, FiUser, FiCalendar, FiEdit2,
   FiMapPin, FiLink, FiBriefcase, FiBuilding,
   FiFacebook, FiInstagram, FiTwitter, FiLinkedin, FiX,
-  FiMessageCircle, FiThumbsUp, FiVideo, FiPlay
+  FiMessageCircle, FiThumbsUp, FiVideo, FiPlay, FiShare2,
+  FiHeart, FiUserPlus
 } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { apiService } from '@/lib/api';
@@ -19,7 +20,10 @@ import VideoEmbed from '@/components/VideoEmbed';
 export default function ProfilePage() {
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [likedPosts, setLikedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,10 +33,18 @@ export default function ProfilePage() {
   const [profileUser, setProfileUser] = useState<any>(null);
   const [viewingUserId, setViewingUserId] = useState<number | null>(null);
 
+  const loadNotifications = async () => {
+    try {
+      const data = await apiService.getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
+
   useEffect(() => {
-    // Lấy userId từ URL query params mỗi khi component mount hoặc URL thay đổi
-    const params = new URLSearchParams(window.location.search);
-    const userIdParam = params.get('userId');
+    // Lấy userId từ URL query params và update khi searchParams thay đổi
+    const userIdParam = searchParams.get('userId');
     
     if (userIdParam) {
       const parsedId = parseInt(userIdParam);
@@ -42,7 +54,10 @@ export default function ProfilePage() {
       console.log('📍 No userId param, viewing own profile');
       setViewingUserId(null);
     }
-  }, [router.asPath]); // Trigger khi URL thay đổi
+    
+    // Reset tab về posts khi chuyển profile
+    setActiveTab('posts');
+  }, [searchParams]); // Re-run khi URL query thay đổi
 
   useEffect(() => {
     // Chờ auth loading xong trước
@@ -55,6 +70,18 @@ export default function ProfilePage() {
       return;
     }
     
+    // Chỉ load data khi viewingUserId đã được xác định (hoặc null cho own profile)
+    // Thêm check để đảm bảo viewingUserId đã được set từ useEffect trước
+    const userIdParam = searchParams.get('userId');
+    const expectedViewingId = userIdParam ? parseInt(userIdParam) : null;
+    
+    // Chỉ load khi viewingUserId khớp với URL param
+    if (viewingUserId !== expectedViewingId) {
+      console.log('⏳ Waiting for viewingUserId to sync...', { viewingUserId, expectedViewingId });
+      return;
+    }
+    
+    console.log('✅ Loading profile data for userId:', viewingUserId || user.id);
     loadProfileData();
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -65,7 +92,7 @@ export default function ProfilePage() {
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [user, router, authLoading, viewingUserId]);
+  }, [user, router, authLoading, viewingUserId, searchParams]);
 
   const loadProfileData = async () => {
     try {
@@ -180,8 +207,17 @@ export default function ProfilePage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications) loadNotifications();
+              }}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors relative"
+            >
               <FiBell className="w-5 h-5 md:w-6 md:h-6" />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
             </button>
             <div className="relative user-menu-container">
               <button
@@ -424,30 +460,66 @@ export default function ProfilePage() {
                   <p>Chưa có bài viết nào</p>
                 </div>
               ) : (
-                posts.map((post) => (
-                  <div key={post.id} className="border-b border-gray-800 p-4 hover:bg-white/5 transition-colors">
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">
-                        {getUserInitial(displayUser?.displayName || '')}
-                      </div>
+                posts.map((post) => {
+                  console.log('Post data:', post); // Debug
+                  return (
+                  <div key={post.id} className="border-b border-gray-800 p-4">
+                    {/* Post Header */}
+                    <div className="flex gap-3 mb-3">
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}/api/users/${post.userId}/avatar?size=thumbnail`}
+                        alt={post.userDisplayName}
+                        className="w-10 h-10 rounded-full object-cover bg-gray-700"
+                        onError={(e) => {
+                          e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect fill='%236366f1' width='40' height='40'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='white' text-anchor='middle' dy='.3em'%3E${post.userDisplayName?.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                        }}
+                      />
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold">{displayUser?.displayName}</span>
-                          <span className="text-gray-400 text-sm">@{displayUser?.email?.split('@')[0]}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">{post.userDisplayName}</span>
+                          {post.userVerified && <VerifiedIcon className="w-4 h-4" />}
                         </div>
-                        <p className="text-sm md:text-base mb-2">{post.content}</p>
-                        <div className="flex gap-6 text-gray-400 text-sm">
-                          <button className="hover:text-primary-500 transition-colors">
-                            <FiMessageCircle className="w-4 h-4" /> {post.commentCount}
-                          </button>
-                          <button className="hover:text-red-500 transition-colors">
-                            <FiThumbsUp className="w-4 h-4" /> {post.likeCount}
-                          </button>
-                        </div>
+                        <p className="text-xs text-gray-400">{new Date(post.createdAt).toLocaleString('vi-VN')}</p>
                       </div>
                     </div>
+
+                    {/* Post Content */}
+                    <p className="mb-3 whitespace-pre-wrap">{post.content}</p>
+
+                    {/* Post Media - Full display */}
+                    {post.fileUrl && post.fileType?.startsWith('image/') && (
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                        alt="Post"
+                        className="w-full rounded-lg mb-3 max-h-[500px] object-contain bg-gray-900 cursor-pointer"
+                        onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`, '_blank')}
+                      />
+                    )}
+                    {post.fileUrl && post.fileType?.startsWith('video/') && (
+                      <video
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+                        controls
+                        className="w-full rounded-lg mb-3 max-h-[500px] bg-gray-900"
+                      />
+                    )}
+
+                    {/* Post Actions */}
+                    <div className="flex gap-6 text-gray-400 text-sm pt-3 border-t border-gray-800">
+                      <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+                        <FiMessageCircle className="w-5 h-5" />
+                        <span>{post.commentCount || 0}</span>
+                      </button>
+                      <button className="flex items-center gap-2 hover:text-red-500 transition-colors">
+                        <FiThumbsUp className="w-5 h-5" />
+                        <span>{post.likeCount || 0}</span>
+                      </button>
+                      <button className="flex items-center gap-2 hover:text-green-500 transition-colors">
+                        <FiShare2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}
@@ -702,6 +774,46 @@ export default function ProfilePage() {
                   {selectedMedia.likeCount}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Panel */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowNotifications(false)}></div>
+          <div className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Thông báo</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-white/5 rounded-full">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(80vh-60px)]">
+              {notifications.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <FiBell className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              ) : (
+                notifications.map((notif: any) => (
+                  <div key={notif.id} className={`p-4 hover:bg-white/5 cursor-pointer border-b border-gray-700 ${!notif.isRead ? 'bg-primary-500/10' : ''}`}>
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        {notif.type === 'POST_LIKE' && <FiHeart className="w-5 h-5 text-red-500" />}
+                        {(notif.type === 'POST_COMMENT' || notif.type === 'COMMENT_REPLY') && <FiMessageCircle className="w-5 h-5 text-blue-500" />}
+                        {(notif.type === 'FRIEND_REQUEST' || notif.type === 'FRIEND_ACCEPT') && <FiUserPlus className="w-5 h-5 text-green-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm"><span className="font-semibold">{notif.actorName}</span> <span className="text-gray-400">{notif.content}</span></p>
+                        <p className="text-xs text-primary-400 mt-1">{new Date(notif.createdAt).toLocaleString('vi-VN')}</p>
+                      </div>
+                      {!notif.isRead && <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

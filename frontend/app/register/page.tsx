@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { apiService } from '@/lib/api';
 import { FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { SnetLogo } from '@/components/icons/SnetIcon';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,6 +20,27 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  // Hiển thị loading khi đang check auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Đang tải...</div>
+      </div>
+    );
+  }
+
+  // Nếu đã có user, không hiển thị form (đang redirect)
+  if (user) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

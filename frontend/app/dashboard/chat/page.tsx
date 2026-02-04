@@ -6,16 +6,76 @@ import { SnetLogo } from '@/components/icons/SnetIcon';
 import { 
   FiHome, FiUsers, FiMessageSquare, FiBell, FiSearch, 
   FiUser, FiLogOut, FiSettings, FiSend, FiPaperclip, 
-  FiMoreVertical, FiArrowLeft, FiPhone, FiVideo
+  FiMoreVertical, FiArrowLeft, FiPhone, FiVideo, FiX,
+  FiHeart, FiUserPlus, FiExternalLink
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
 import { webSocketService } from '@/lib/websocket';
+import { registerServiceWorker, requestNotificationPermission, showNotification } from '@/lib/notification';
+
+// Component hiển thị preview bài post được chia sẻ
+function PostSharePreview({ message }: { message: any }) {
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadPost = async () => {
+      try {
+        const data = JSON.parse(message.content);
+        const postData = await apiService.getPost(data.postId);
+        setPost(postData);
+      } catch (error) {
+        console.error('Failed to load shared post:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPost();
+  }, [message]);
+
+  if (loading) {
+    return <div className="text-xs opacity-70">Đang tải...</div>;
+  }
+
+  if (!post) {
+    return <div className="text-xs opacity-70">Không thể tải bài viết</div>;
+  }
+
+  return (
+    <div 
+      className="border border-white/20 rounded-lg p-2 cursor-pointer hover:bg-white/5 transition-colors"
+      onClick={() => router.push(`/dashboard?postId=${post.id}`)}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center text-xs font-bold">
+          {post.userDisplayName?.charAt(0)}
+        </div>
+        <span className="text-xs font-semibold">{post.userDisplayName}</span>
+      </div>
+      <p className="text-sm line-clamp-2 mb-2">{post.content}</p>
+      {post.fileUrl && post.fileType?.startsWith('image/') && (
+        <img 
+          src={`${process.env.NEXT_PUBLIC_API_URL}${post.fileUrl}`}
+          alt="Post"
+          className="w-full h-32 object-cover rounded"
+        />
+      )}
+      <div className="flex items-center gap-2 mt-2 text-xs opacity-70">
+        <FiExternalLink className="w-3 h-3" />
+        <span>Xem bài viết</span>
+      </div>
+    </div>
+  );
+}
 
 export default function ChatPage() {
   const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [friends, setFriends] = useState<any[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -25,12 +85,46 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000);
 
+  const loadNotifications = async () => {
+    try {
+      const data = await apiService.getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
+
+  // Format thời gian "x phút trước", "x giờ trước"
+  const formatLastSeen = (lastSeen: string | undefined) => {
+    if (!lastSeen) return 'lâu';
+    
+    const now = new Date();
+    const lastSeenDate = new Date(lastSeen);
+    const diffMs = now.getTime() - lastSeenDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    return 'lâu';
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
       router.push('/login');
       return;
     }
+    
+    // Register Service Worker and request notification permission
+    const initNotifications = async () => {
+      await registerServiceWorker();
+      await requestNotificationPermission();
+    };
+    initNotifications();
     
     loadFriends();
 
@@ -44,6 +138,8 @@ export default function ChatPage() {
       (message) => {
         // Nhận tin nhắn mới hoặc cập nhật trạng thái
         console.log('New message received:', message);
+        
+        // Nếu đang mở chat với người gửi
         if (selectedFriend && (message.senderId === selectedFriend.id || message.receiverId === selectedFriend.id)) {
           // Cập nhật tin nhắn nếu đã tồn tại (trạng thái đã xem)
           setMessages(prev => {
@@ -60,6 +156,23 @@ export default function ChatPage() {
           if (message.receiverId === user?.id && !message.readAt) {
             apiService.markAsRead(message.id).catch(err => console.error('Failed to mark as read:', err));
           }
+        } else if (message.receiverId === user?.id) {
+          // Tin nhắn mới từ người khác (không đang mở chat)
+          console.log('📬 New message from:', message.senderName);
+          
+          // Cập nhật badge unread count cho friend
+          setFriends(prev => prev.map(f => 
+            f.id === message.senderId 
+              ? { ...f, unreadCount: (f.unreadCount || 0) + 1 }
+              : f
+          ));
+          
+          // Hiển thị notification qua Service Worker (hoạt động cả khi đóng tab)
+          showNotification(
+            `Tin nhắn mới từ ${message.senderName}`,
+            message.content,
+            { senderId: message.senderId }
+          );
         }
       },
       () => {
@@ -70,12 +183,12 @@ export default function ChatPage() {
             webSocketService.client.subscribe('/topic/user-status', (msg) => {
               const status = JSON.parse(msg.body);
               if (selectedFriend && status.userId === selectedFriend.id) {
-                setSelectedFriend(prev => ({
+                setSelectedFriend((prev: any) => ({
                   ...prev,
                   online: status.online,
                   lastSeen: status.lastSeen
                 }));
-                setFriends(prev => prev.map(f => 
+                setFriends((prev: any[]) => prev.map((f: any) => 
                   f.id === status.userId 
                     ? { ...f, online: status.online, lastSeen: status.lastSeen }
                     : f
@@ -106,6 +219,11 @@ export default function ChatPage() {
     if (selectedFriend) {
       loadMessages();
       setShowMobileSidebar(false);
+      
+      // Reset unread count khi mở chat
+      setFriends(prev => prev.map(f => 
+        f.id === selectedFriend.id ? { ...f, unreadCount: 0 } : f
+      ));
     }
   }, [selectedFriend]);
 
@@ -151,19 +269,15 @@ export default function ChatPage() {
     if (!messageText.trim() || !selectedFriend) return;
     
     try {
-      // Gửi qua REST API để lưu vào database
+      // Gửi qua REST API - backend sẽ tự động broadcast qua WebSocket
       const response = await apiService.sendMessage({
         receiverId: selectedFriend.id,
         content: messageText,
         type: 'TEXT'
       });
       
-      // Thêm tin nhắn mới vào cuối array (ở dưới)
+      // Thêm tin nhắn mới vào UI ngay lập tức (optimistic update)
       setMessages([...messages, response]);
-      
-      // Gửi qua WebSocket để thông báo real-time
-      webSocketService.sendMessage(selectedFriend.id, messageText, 'TEXT');
-      
       setMessageText('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -233,8 +347,17 @@ export default function ChatPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications) loadNotifications();
+              }}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors relative"
+            >
               <FiBell className="w-5 h-5 md:w-6 md:h-6" />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              )}
             </button>
             <div className="relative user-menu-container">
               <button
@@ -320,15 +443,21 @@ export default function ChatPage() {
                         e.currentTarget.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Crect fill='%236366f1' width='56' height='56'/%3E%3Ctext x='50%25' y='50%25' font-size='28' fill='white' text-anchor='middle' dy='.3em' font-family='Arial'%3E${friend.displayName?.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E`;
                       }}
                     />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-black"></div>
+                    {friend.online && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-black"></div>
+                    )}
                   </div>
                   <div className="flex-1 text-left min-w-0">
                     <h3 className="font-semibold truncate text-sm md:text-base">{friend.displayName}</h3>
-                    <p className="text-xs md:text-sm text-gray-400 truncate flex items-center gap-1">
-                      {friend.online && <span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></span>}
-                      {friend.online ? 'Đang hoạt động' : `Hoạt động ${friend.lastSeen ? new Date(friend.lastSeen).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : 'lâu'}`}
+                    <p className="text-xs md:text-sm text-gray-400 truncate">
+                      {friend.online ? 'Đang hoạt động' : `Hoạt động ${formatLastSeen(friend.lastSeen)}`}
                     </p>
                   </div>
+                  {friend.unreadCount > 0 && (
+                    <div className="bg-indigo-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                      {friend.unreadCount > 9 ? '9+' : friend.unreadCount}
+                    </div>
+                  )}
                 </button>
               ))
             )}
@@ -358,9 +487,8 @@ export default function ChatPage() {
                   />
                   <div>
                     <h2 className="font-bold text-sm md:text-base">{selectedFriend.displayName}</h2>
-                    <p className="text-xs text-gray-400 flex items-center gap-1">
-                      {selectedFriend.online && <span className="w-2 h-2 bg-green-500 rounded-full"></span>}
-                      {selectedFriend.online ? 'Đang hoạt động' : `Hoạt động ${selectedFriend.lastSeen ? new Date(selectedFriend.lastSeen).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : 'lâu'}`}
+                    <p className="text-xs text-gray-400">
+                      {selectedFriend.online ? 'Đang hoạt động' : `Hoạt động ${formatLastSeen(selectedFriend.lastSeen)}`}
                     </p>
                   </div>
                 </div>
@@ -412,7 +540,11 @@ export default function ChatPage() {
                                 : 'bg-white/10 text-white'
                             }`}
                           >
-                            <p className="break-words text-sm md:text-base">{message.content}</p>
+                            {message.type === 'POST_SHARE' ? (
+                              <PostSharePreview message={message} />
+                            ) : (
+                              <p className="break-words text-sm md:text-base">{message.content}</p>
+                            )}
                             <div className="flex items-center justify-between gap-2 mt-1">
                               <p className="text-xs opacity-70">
                                 {new Date(message.sentAt).toLocaleTimeString('vi-VN', {
@@ -503,6 +635,46 @@ export default function ChatPage() {
           </button>
         </div>
       </nav>
+
+      {/* Notification Panel */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowNotifications(false)}></div>
+          <div className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Thông báo</h2>
+              <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-white/5 rounded-full">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(80vh-60px)]">
+              {notifications.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <FiBell className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Chưa có thông báo nào</p>
+                </div>
+              ) : (
+                notifications.map((notif: any) => (
+                  <div key={notif.id} className={`p-4 hover:bg-white/5 cursor-pointer border-b border-gray-700 ${!notif.isRead ? 'bg-primary-500/10' : ''}`}>
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        {notif.type === 'POST_LIKE' && <FiHeart className="w-5 h-5 text-red-500" />}
+                        {(notif.type === 'POST_COMMENT' || notif.type === 'COMMENT_REPLY') && <FiMessageCircle className="w-5 h-5 text-blue-500" />}
+                        {(notif.type === 'FRIEND_REQUEST' || notif.type === 'FRIEND_ACCEPT') && <FiUserPlus className="w-5 h-5 text-green-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm"><span className="font-semibold">{notif.actorName}</span> <span className="text-gray-400">{notif.content}</span></p>
+                        <p className="text-xs text-primary-400 mt-1">{new Date(notif.createdAt).toLocaleString('vi-VN')}</p>
+                      </div>
+                      {!notif.isRead && <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

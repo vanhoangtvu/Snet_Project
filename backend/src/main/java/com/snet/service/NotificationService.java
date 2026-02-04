@@ -53,6 +53,30 @@ public class NotificationService {
         );
     }
 
+    // Thông báo khi gửi lời mời kết bạn
+    public void notifyFriendRequest(User receiver, User sender) {
+        createNotification(
+            receiver,
+            sender,
+            Notification.NotificationType.FRIEND_REQUEST,
+            null,
+            null,
+            "đã gửi lời mời kết bạn cho bạn"
+        );
+    }
+
+    // Thông báo khi chấp nhận kết bạn
+    public void notifyFriendAccept(User receiver, User accepter) {
+        createNotification(
+            receiver,
+            accepter,
+            Notification.NotificationType.FRIEND_ACCEPT,
+            null,
+            null,
+            "đã chấp nhận lời mời kết bạn của bạn"
+        );
+    }
+
     // Thông báo khi comment bài viết
     public void notifyPostComment(Post post, User actor, String commentContent) {
         createNotification(

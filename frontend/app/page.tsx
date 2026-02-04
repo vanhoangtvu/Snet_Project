@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { SnetIconLarge, SnetLogo } from '@/components/icons/SnetIcon';
@@ -8,14 +8,18 @@ import { SnetIconLarge, SnetLogo } from '@/components/icons/SnetIcon';
 export default function Home() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    // Nếu đã đăng nhập, redirect ngay
     if (!loading && user) {
+      setIsRedirecting(true);
       router.push('/dashboard');
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  // Hiển thị loading khi: đang check auth HOẶC đang redirect
+  if (loading || isRedirecting) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black gap-3">
         <SnetIconLarge size={60} className="text-primary-500 animate-pulse" />
@@ -23,11 +27,14 @@ export default function Home() {
           <div className="h-full bg-primary-500 rounded-full animate-[loading_1.5s_ease-in-out_infinite]" 
                style={{ width: '40%' }}></div>
         </div>
-        <p className="text-gray-400 text-xs animate-pulse">Đang tải...</p>
+        <p className="text-gray-400 text-xs animate-pulse">
+          {isRedirecting ? 'Đang chuyển hướng...' : 'Đang tải...'}
+        </p>
       </div>
     );
   }
 
+  // Chỉ hiển thị landing page khi: không loading VÀ không có user
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="grid lg:grid-cols-2 min-h-screen">

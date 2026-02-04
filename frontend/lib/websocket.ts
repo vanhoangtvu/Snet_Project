@@ -3,7 +3,7 @@ import SockJS from 'sockjs-client';
 import { authService } from './auth';
 
 class WebSocketService {
-  private client: Client | null = null;
+  public client: Client | null = null;
   private connected: boolean = false;
 
   connect(onMessageReceived: (message: any) => void, onConnected?: () => void) {

@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/public/**", "/ws/**").permitAll()
+                        .requestMatchers("/api/posts/share/*/qrcode", "/api/posts/share/*/info", "/api/posts/share/*").permitAll()
+                        .requestMatchers("/api/posts/test-qr").permitAll()
                         .requestMatchers("/api/users/*/avatar", "/api/users/*/cover").permitAll()
                         .requestMatchers("/api/files/*/public-preview", "/api/files/*/thumbnail").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()

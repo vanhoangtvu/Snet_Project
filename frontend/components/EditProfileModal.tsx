@@ -78,12 +78,23 @@ export default function EditProfileModal({ user, onClose, onSuccess }: EditProfi
       if (avatarFile) data.append('avatar', avatarFile);
       if (coverFile) data.append('coverPhoto', coverFile);
 
-      await apiService.updateProfile(data);
+      const result = await apiService.updateProfile(data);
+      console.log('✅ Profile updated:', result);
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('❌ Lỗi: Không thể cập nhật profile');
+    } catch (error: any) {
+      console.error('❌ Failed to update profile:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      // Nếu lỗi timeout nhưng có thể đã lưu thành công
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        alert('⏱️ Yêu cầu mất nhiều thời gian. Vui lòng kiểm tra lại profile.');
+        onSuccess(); // Refresh để kiểm tra
+        onClose();
+      } else {
+        alert('❌ Lỗi: Không thể cập nhật profile');
+      }
     } finally {
       setLoading(false);
     }

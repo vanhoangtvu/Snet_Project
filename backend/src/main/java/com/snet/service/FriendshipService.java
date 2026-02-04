@@ -22,6 +22,7 @@ public class FriendshipService {
     
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     
     @Transactional
     public void sendFriendRequest(Long userId, Long friendId) {
@@ -51,6 +52,9 @@ public class FriendshipService {
                 .build();
         
         friendshipRepository.save(friendship);
+        
+        // Gửi thông báo realtime
+        notificationService.notifyFriendRequest(friend, user);
     }
     
     @Transactional
@@ -74,6 +78,9 @@ public class FriendshipService {
                 .acceptedAt(LocalDateTime.now())
                 .build();
         friendshipRepository.save(reverseFriendship);
+        
+        // Gửi thông báo cho người gửi lời mời
+        notificationService.notifyFriendAccept(friendship.getUser(), friendship.getFriend());
     }
     
     @Transactional

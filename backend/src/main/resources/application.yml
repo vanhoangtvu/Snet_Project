@@ -46,7 +46,7 @@ spring:
 server:
   port: 8086
   address: 0.0.0.0
-  url: ${app.api-url:http://localhost:8086}
+  url: ${app.api-url:https://api.snet.io.vn}
   error:
     include-message: always
     include-binding-errors: always
@@ -86,6 +86,11 @@ cors:
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: "*"
   allow-credentials: true
+
+# App Configuration
+app:
+  frontend-url: ${FRONTEND_URL:https://snet.io.vn}
+  api-url: ${API_URL:https://api.snet.io.vn}
 
 logging:
   level:

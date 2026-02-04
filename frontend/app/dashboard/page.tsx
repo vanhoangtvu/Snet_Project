@@ -14,6 +14,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { apiService } from '@/lib/api';
 import MentionInput from '@/components/MentionInput';
+import SharePostModal from '@/components/SharePostModal';
 
 interface Post {
   id: number;
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [friendsList, setFriendsList] = useState<any[]>([]);
   const [posting, setPosting] = useState(false);
+  const [sharingPostId, setSharingPostId] = useState<number | null>(null);
   const avatarTimestamp = useRef(Math.floor(Date.now() / 60000) * 60000); // Cache for 1 minute
 
   useEffect(() => {
@@ -1039,7 +1041,10 @@ export default function DashboardPage() {
                     <FiMessageCircle className="w-4 h-4 md:w-5 md:h-5" />
                     <span className="text-xs md:text-sm hidden sm:inline">Bình luận</span>
                   </button>
-                  <button className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 justify-center">
+                  <button 
+                    onClick={() => setSharingPostId(post.id)}
+                    className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 hover:bg-white/5 rounded-lg transition-colors flex-1 justify-center"
+                  >
                     <FiShare2 className="w-4 h-4 md:w-5 md:h-5" />
                     <span className="text-xs md:text-sm hidden sm:inline">Chia sẻ</span>
                   </button>
@@ -1333,6 +1338,14 @@ export default function DashboardPage() {
           </button>
         </div>
       </nav>
+
+      {/* Share Modal */}
+      {sharingPostId && (
+        <SharePostModal
+          postId={sharingPostId}
+          onClose={() => setSharingPostId(null)}
+        />
+      )}
     </div>
   );
 }

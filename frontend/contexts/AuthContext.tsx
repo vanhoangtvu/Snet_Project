@@ -58,70 +58,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     checkAuth();
+    
+    // Disconnect WebSocket khi đóng tab/browser
+    const handleBeforeUnload = () => {
+      try {
+        const { webSocketService } = require('@/lib/websocket');
+        if (webSocketService.isConnected()) {
+          webSocketService.disconnect();
+        }
+      } catch (error) {
+        // Ignore error
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   const checkAuth = async () => {
     try {
       const token = authService.getToken();
-      console.log('🔍 checkAuth - Token:', token ? '✓ Found' : '✗ Not found');
       
       if (!token) {
-        console.log('❌ No token');
         setLoading(false);
         return;
       }
 
-      // Kiểm tra token còn hạn không
       if (!authService.isAuthenticated()) {
-        console.log('❌ Token expired');
         authService.clearAllData();
         setUser(null);
         setLoading(false);
         return;
       }
 
-      // Lấy user từ localStorage ngay
       const cachedUser = authService.getUser();
-      console.log('💾 Cached user:', cachedUser?.email || 'None');
       
       if (cachedUser) {
-        console.log('✅ Setting cached user immediately');
+        // Có cached user - set ngay và cho phép truy cập
         setUser(cachedUser);
         setLoading(false);
         
-        // Fetch API ở background để cập nhật (không block)
+        // Background update - không block UI
         apiService.getCurrentUser()
           .then(userData => {
-            console.log('✅ Updated user from API:', userData.email);
             setUser(userData);
             authService.setUser(userData);
           })
           .catch(apiError => {
-            console.error('⚠️ API error:', apiError.response?.status, apiError.message);
-            // Chỉ clear auth nếu 401 và không có cached user
             if (apiError.response?.status === 401) {
-              console.log('🔐 401 - Token invalid, clearing auth');
               authService.clearAllData();
               setUser(null);
-              if (typeof window !== 'undefined') {
-                window.location.href = '/login';
-              }
             }
-            // Nếu lỗi khác, giữ cached user
           });
       } else {
-        // Không có cached user, fetch từ API
-        console.log('🔄 No cached user, fetching from API...');
+        // Không có cached user - phải fetch
         try {
           const userData = await apiService.getCurrentUser();
-          console.log('✅ Got user from API:', userData.email);
           setUser(userData);
           authService.setUser(userData);
           setLoading(false);
         } catch (apiError: any) {
-          console.error('❌ API Error:', apiError.response?.status);
           if (apiError.response?.status === 401) {
-            console.log('🔐 401 - No token or invalid token');
             authService.clearAllData();
             setUser(null);
           }
@@ -129,7 +129,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     } catch (error: any) {
-      console.error('❌ Auth check failed:', error);
       setLoading(false);
     }
   };
@@ -183,12 +182,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Gọi logout từ authService (sẽ xóa tất cả dữ liệu)
+    // Disconnect WebSocket trước khi logout
+    try {
+      const { webSocketService } = require('@/lib/websocket');
+      webSocketService.disconnect();
+    } catch (error) {
+      console.error('Failed to disconnect WebSocket:', error);
+    }
+    
     authService.logout();
-    // Reset user state trong context
     setUser(null);
-    // authService.logout() đã redirect, nhưng để chắc chắn
-    // router.push('/login');
   };
 
   const refreshUser = async () => {
